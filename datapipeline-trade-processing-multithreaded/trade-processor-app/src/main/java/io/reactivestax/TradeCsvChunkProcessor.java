@@ -4,7 +4,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.concurrent.*;
 
-public class ChunkProcessorImpl implements ChunkProcessor {
+public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     static Connection connection;
     int numberOfChunks;
@@ -15,7 +15,7 @@ public class ChunkProcessorImpl implements ChunkProcessor {
     static LinkedBlockingQueue<String> queue3 = new LinkedBlockingQueue<>();
 
 
-    public ChunkProcessorImpl(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
     }

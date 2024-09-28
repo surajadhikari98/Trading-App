@@ -3,7 +3,6 @@ package io.reactivestax;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class Main {
 
@@ -14,11 +13,11 @@ public class Main {
 //    }
 
     public static void main(String[] args) throws Exception {
-        new ChunkGeneratorImpl().generateChunk("/Users/Suraj.Adhikari/downloads/trades.csv");
+        new TradeCsvChunkGenerator().generateChunk("/Users/Suraj.Adhikari/downloads/trades.csv");
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
-        ChunkProcessorImpl chunkProcessorImpl = new ChunkProcessorImpl(chunkProcessorThreadPool, 10);
-        chunkProcessorImpl.processChunks();
-        chunkProcessorImpl.startMultiThreadsForReadingFromQueue();
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10);
+        tradeCsvChunkProcessor.processChunks();
+        tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue();
 
 
         //calling for tradeProcessor for passing and reading the queue
