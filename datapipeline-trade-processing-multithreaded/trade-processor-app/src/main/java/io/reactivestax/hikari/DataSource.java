@@ -4,8 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariConfig;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 public class DataSource {
 
@@ -19,7 +17,7 @@ public class DataSource {
         config.setPassword("password123");
 
         // Optional HikariCP settings
-        config.setMaximumPoolSize(10); // Max 10 connections in the pool
+        config.setMaximumPoolSize(50); // Max 10 connections in the pool
         config.setMinimumIdle(5); // Minimum idle connections
         config.setConnectionTimeout(30000); // 30 seconds timeout for obtaining a connection
         config.setIdleTimeout(600000); // 10 minutes idle timeout
@@ -46,19 +44,4 @@ public class DataSource {
         }
     }
 
-    public static void main(String[] args) {
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM Students")) {
-
-            while (rs.next()) {
-                System.out.println("Student ID: " + rs.getInt("student_id"));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            close();
-        }
-    }
 }

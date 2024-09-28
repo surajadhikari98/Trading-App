@@ -1,5 +1,7 @@
 package io.reactivestax;
 
+import io.reactivestax.hikari.DataSource;
+
 import java.io.*;
 import java.sql.*;
 import java.util.concurrent.*;
@@ -14,6 +16,13 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     static LinkedBlockingQueue<String> queue2 = new LinkedBlockingQueue<>();
     static LinkedBlockingQueue<String> queue3 = new LinkedBlockingQueue<>();
 
+    static {
+        try {
+            connection = DataSource.getConnection();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
@@ -22,7 +31,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void processChunks() {
         try {
-            for (int i = 0; i <= 1; i++) {
+            for (int i = 0; i <= 10; i++) {
                 String chunkFileName = "trades_chunk_" + i + ".csv";
                 chunkProcessorThreadPool.submit(() -> {
                     try {
@@ -32,15 +41,17 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                     }
                 });
             }
-//            barrier.await();
-//            startMultiThreadsForReadingFromQueue();
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             System.out.println("done insertion in the trade payload");
-            chunkProcessorThreadPool.shutdown();
+//            chunkProcessorThreadPool.shutdown();
         }
+//        ArrayList<LinkedBlockingQueue<String>> queues = new ArrayList<>();
+//        queues.add(queue1);
+//        queues.add(queue2);
+//        queues.add(queue3);
+//        return queues;
     }
 
 
@@ -52,7 +63,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Succefully inserted into db." + insertIntoTradePayload(fileName));
+//        System.out.println("Succefully inserted into db." + insertIntoTradePayload(fileName));
         System.out.println("queue1 size" + queue1.size());
         System.out.println("queue2 size" + queue2.size());
         System.out.println("queue3 size" + queue3.size());
@@ -60,8 +71,9 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         //maintain the Map for inserting into the queue
     }
 
-    private synchronized int insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
-        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/boca-bc24-java-core-problems/src/problems/thread/distributedtrade/tradefiles/";
+    private int insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
+//        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/boca-bc24-java-core-problems/src/problems/thread/distributedtrade/tradefiles/";
+        String filePath = "C:\\Users\\suraj\\source\\full-stack-student-mode\\suad-bootcamp-2024\\datapipeline-trade-processing-multithreaded\\trade-processor-app\\src\\main\\java\\io\\reactivestax\\files\\";
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
         PreparedStatement statement = connection.prepareStatement(insertQuery);
         String line;
@@ -84,7 +96,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     @Override
     public void writeToTradeQueue(String[] trade) throws InterruptedException {
         if (queueDistributorMap.get(trade[0]) == null) {
-            int queueNumber = ThreadLocalRandom.current().nextInt(1, 4);
+            int queueNumber = ThreadLocalRandom.current().nextInt(1, 4); //generating the random no from 1 to 3 in thread safe manner
             queueDistributorMap.putIfAbsent(trade[2], queueNumber);
             selectQueue(trade[0], queueNumber);
         }
@@ -113,9 +125,9 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         return (split[0]) != null;
     }
 
-    public void startMultiThreadsForReadingFromQueue() throws Exception {
+    public void startMultiThreadsForReadingFromQueue(ExecutorService executorService) throws Exception {
         //Start multiple consumer threads to process transactions
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
+//        ExecutorService executorService = Executors.newFixedThreadPool(3);
             executorService.submit(new TradeProcessor(queue1));
             executorService.submit(new TradeProcessor(queue2));
             executorService.submit( new TradeProcessor(queue3));

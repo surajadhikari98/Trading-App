@@ -18,7 +18,16 @@ public class TradeProcessor implements Runnable {
     }
 
     public TradeProcessor(LinkedBlockingQueue<String> queue){
-        this.queue = new LinkedBlockingQueue<>(queue);
+        this.queue =queue;
+    }
+
+    @Override
+    public void run() {
+        try {
+            readFromQueueAndQueryPayload();
+        } catch (InterruptedException | SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void readFromQueueAndQueryPayload() throws InterruptedException, SQLException {
@@ -35,7 +44,7 @@ public class TradeProcessor implements Runnable {
             if(resultSet.next()) {
                 String payload = resultSet.getString(1);
                 String[] payloads = payload.split(",");
-                System.out.println("result"+ payload);
+                System.out.println("result journal"+ payload);
 //                lookUpStatement.setString(1,payloads[3]);
 //                ResultSet lookUpResult = lookUpStatement.executeQuery();
 //                if(!lookUpResult.next()) {
@@ -56,12 +65,5 @@ public class TradeProcessor implements Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        try {
-            readFromQueueAndQueryPayload();
-        } catch (InterruptedException | SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+
 }
