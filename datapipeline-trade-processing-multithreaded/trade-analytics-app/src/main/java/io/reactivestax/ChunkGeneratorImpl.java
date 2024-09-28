@@ -1,4 +1,4 @@
-package problems.thread.distributedtrade;
+package io.reactivestax;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class ChunkGeneratorImpl implements ChunkGenerator {
         //creating the chunks and submitting to the executorService
         AtomicInteger startLine = new AtomicInteger(1);
         for (int i = 0; i < numberOfChunks; i++) {
-            String outputFile = "/Users/Suraj.Adhikari/sources/student-mode-programs/boca-bc24-java-core-problems/src/problems/thread/distributedtrade/tradefiles/" + "trades_chunk_" + (i + 1) + ".csv";
+            String outputFile = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/datapipeline-trade-processing-multithreaded/trade-analytics-app/src/main/java/io/reactivestax/tradefiles" + "trades_chunk_" + (i + 1) + ".csv";
             executorService.submit(() -> {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {

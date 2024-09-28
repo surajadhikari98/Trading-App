@@ -1,4 +1,4 @@
-package problems.thread.distributedtrade;
+package io.reactivestax;
 
 public interface ChunkProcessor {
     void processChunks() throws Exception;

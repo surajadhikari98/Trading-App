@@ -1,4 +1,4 @@
-package problems.thread.distributedtrade;
+package io.reactivestax;
 
 import java.io.FileNotFoundException;
 

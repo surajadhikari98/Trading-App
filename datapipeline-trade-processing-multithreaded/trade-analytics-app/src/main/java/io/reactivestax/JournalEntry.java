@@ -1,5 +1,4 @@
-package problems.thread.distributedtrade;
-
+package io.reactivestax;
 
 public class JournalEntry {
     private String tradeIdentifier;

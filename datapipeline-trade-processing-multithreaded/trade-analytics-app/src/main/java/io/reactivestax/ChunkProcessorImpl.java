@@ -1,7 +1,4 @@
-package problems.thread.distributedtrade;
-
-
-import problems.jdbc.hikari.DataSource;
+package io.reactivestax;
 
 import java.io.*;
 import java.sql.*;
@@ -12,25 +9,15 @@ public class ChunkProcessorImpl implements ChunkProcessor {
     static Connection connection;
     int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
-    private static final CyclicBarrier barrier;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap();
     static LinkedBlockingQueue<String> queue1 = new LinkedBlockingQueue<>();
     static LinkedBlockingQueue<String> queue2 = new LinkedBlockingQueue<>();
     static LinkedBlockingQueue<String> queue3 = new LinkedBlockingQueue<>();
 
-    static {
-        try {
-            connection = DataSource.getConnection();
-            barrier = new CyclicBarrier(11, () -> System.out.println("All chunks_processor have reached the barrier. Proceeding to start the consumer part"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public ChunkProcessorImpl(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
-//        this.barrier = barrier;
     }
 
     public void processChunks() {
@@ -44,9 +31,6 @@ public class ChunkProcessorImpl implements ChunkProcessor {
                         throw new RuntimeException(e);
                     }
                 });
-                System.out.println("Thread " + i + "waiting at the barrier");
-
-                System.out.println("Thread " + i + "passed the barrier");
             }
 //            barrier.await();
 //            startMultiThreadsForReadingFromQueue();
@@ -63,7 +47,6 @@ public class ChunkProcessorImpl implements ChunkProcessor {
     public void processChunkFiles(String fileName) throws IOException, SQLException, InterruptedException {
         try {
             insertIntoTradePayload(fileName);
-            startMultiThreadsForReadingFromQueue();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (Exception e) {

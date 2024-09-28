@@ -1,7 +1,7 @@
-package problems.thread.distributedtrade;
+package io.reactivestax;
 
+import io.reactivestax.hikari.DataSource;
 
-import problems.jdbc.hikari.DataSource;
 import java.sql.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
