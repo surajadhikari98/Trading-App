@@ -2,33 +2,34 @@ package io.reactivestax;
 
 
 import java.util.ArrayList;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
 
-//    private static final CyclicBarrier barrier;
-
-//    static{
-//        barrier = new CyclicBarrier(11, () -> System.out.println("All chunks_processor have reached the barrier. Proceeding to start the consumer part"));
-//    }
-
     public static void main(String[] args) throws Exception {
 //        new TradeCsvChunkGenerator().generateChunk("/Users/Suraj.Adhikari/downloads/trades.csv");
         new TradeCsvChunkGenerator().generateChunk("C:\\Users\\suraj\\Downloads\\csv\\trades.csv");
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10);
+        CyclicBarrier barrier = new CyclicBarrier(10, () -> System.out.println("All chunks processed. Starting consumer threads."));
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, barrier);
         tradeCsvChunkProcessor.processChunks();
 //        tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue();
 
-//Thread.sleep(10000);
+        // Wait for chunk processing to finish
+        barrier.await();
+
         ExecutorService executorService = Executors.newFixedThreadPool(3);
+        tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue(executorService);
+
+//Thread.sleep(10000);
 //
 //        executorService.submit(new TradeProcessor(queueList[0]));
 //        executorService.submit(new TradeProcessor(queueList[1]));
 //        executorService.submit( new TradeProcessor(queueList[2]));
 
-        tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue(executorService);
+
 
         //calling for tradeProcessor for passing and reading the queue
 //        chunkProcessorImpl.startMultiThreadsForReadingFromQueue();

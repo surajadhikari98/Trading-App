@@ -5,6 +5,7 @@ import io.reactivestax.hikari.DataSource;
 import java.io.*;
 import java.sql.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TradeCsvChunkProcessor implements ChunkProcessor {
 
@@ -15,6 +16,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     static LinkedBlockingQueue<String> queue1 = new LinkedBlockingQueue<>();
     static LinkedBlockingQueue<String> queue2 = new LinkedBlockingQueue<>();
     static LinkedBlockingQueue<String> queue3 = new LinkedBlockingQueue<>();
+    static AtomicInteger currentQueueIndex = new AtomicInteger(0);
+    private CyclicBarrier barrier;
 
     static {
         try {
@@ -24,34 +27,59 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, CyclicBarrier barrier) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
+        this.barrier = barrier;
     }
+
+//    public void processChunks() {
+//        try {
+//            for (int i = 0; i <= 10; i++) {
+//                String chunkFileName = "trades_chunk_" + i + ".csv";
+//                chunkProcessorThreadPool.submit(() -> {
+//                    try {
+//                        processChunkFiles(chunkFileName);
+//                    } catch (IOException | SQLException | InterruptedException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            System.out.println("done insertion in the trade payload");
+////            chunkProcessorThreadPool.shutdown();
+//        }
+////        ArrayList<LinkedBlockingQueue<String>> queues = new ArrayList<>();
+////        queues.add(queue1);
+////        queues.add(queue2);
+////        queues.add(queue3);
+////        return queues;
+//    }
+
 
     public void processChunks() {
         try {
-            for (int i = 0; i <= 10; i++) {
+            for (int i = 1; i <= numberOfChunks; i++) {
                 String chunkFileName = "trades_chunk_" + i + ".csv";
                 chunkProcessorThreadPool.submit(() -> {
                     try {
                         processChunkFiles(chunkFileName);
                     } catch (IOException | SQLException | InterruptedException e) {
                         throw new RuntimeException(e);
+                    } finally {
+                        try {
+                            barrier.await();
+                        } catch (InterruptedException | BrokenBarrierException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 });
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            System.out.println("done insertion in the trade payload");
-//            chunkProcessorThreadPool.shutdown();
         }
-//        ArrayList<LinkedBlockingQueue<String>> queues = new ArrayList<>();
-//        queues.add(queue1);
-//        queues.add(queue2);
-//        queues.add(queue3);
-//        return queues;
     }
 
 
@@ -93,18 +121,27 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
+//    @Override
+//    public void writeToTradeQueue(String[] trade) throws InterruptedException {
+//        if (queueDistributorMap.get(trade[2]) == null) {
+//            int queueNumber = ThreadLocalRandom.current().nextInt(1, 4); //generating the random no from 1 to 3 in thread safe manner
+//            queueDistributorMap.putIfAbsent(trade[2], queueNumber);
+//            selectQueue(trade[0], queueNumber);
+//        }
+//        //consulting with the map for the insertion in the array blocking queue
+//        if (queueDistributorMap.get(trade[2]) != null) {
+//            Integer queueNumber = queueDistributorMap.get(trade[2]);
+//            selectQueue(trade[0], queueNumber);
+//        }
+//
+//
+//    }
+
     @Override
     public void writeToTradeQueue(String[] trade) throws InterruptedException {
-        if (queueDistributorMap.get(trade[0]) == null) {
-            int queueNumber = ThreadLocalRandom.current().nextInt(1, 4); //generating the random no from 1 to 3 in thread safe manner
-            queueDistributorMap.putIfAbsent(trade[2], queueNumber);
-            selectQueue(trade[0], queueNumber);
-        }
-        //consulting with the map for the insertion in the array blocking queue
-        if (queueDistributorMap.get(trade[0]) != null) {
-            Integer queueNumber = queueDistributorMap.get(trade[0]);
-            selectQueue(trade[0], queueNumber);
-        }
+        int queueNumber = queueDistributorMap.computeIfAbsent(trade[2], k -> currentQueueIndex.incrementAndGet() % 3 + 1);
+        selectQueue(trade[0], queueNumber);
+        System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
     }
 
     private static void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
@@ -131,6 +168,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
             executorService.submit(new TradeProcessor(queue1));
             executorService.submit(new TradeProcessor(queue2));
             executorService.submit( new TradeProcessor(queue3));
+            executorService.shutdown();
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
     }
 
 }
