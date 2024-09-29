@@ -51,11 +51,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 //            System.out.println("done insertion in the trade payload");
 ////            chunkProcessorThreadPool.shutdown();
 //        }
-////        ArrayList<LinkedBlockingQueue<String>> queues = new ArrayList<>();
-////        queues.add(queue1);
-////        queues.add(queue2);
-////        queues.add(queue3);
-////        return queues;
 //    }
 
 
@@ -163,13 +158,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     public void startMultiThreadsForReadingFromQueue(ExecutorService executorService) throws Exception {
-        //Start multiple consumer threads to process transactions
-//        ExecutorService executorService = Executors.newFixedThreadPool(3);
             executorService.submit(new TradeProcessor(queue1));
             executorService.submit(new TradeProcessor(queue2));
             executorService.submit( new TradeProcessor(queue3));
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
     }
-
 }

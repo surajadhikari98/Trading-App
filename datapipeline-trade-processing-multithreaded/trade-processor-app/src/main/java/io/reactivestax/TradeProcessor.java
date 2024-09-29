@@ -35,22 +35,22 @@ public class TradeProcessor implements Runnable {
             String tradeId = this.queue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
-//            String lookupQueryForSecurity = "SELECT * FROM securities_reference WHERE cusip = ?";
+            String lookupQueryForSecurity = "SELECT * FROM securities_reference WHERE cusip = ?";
             PreparedStatement stmt = connection.prepareStatement(lookupQuery);
             PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
-//            PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);
+            PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);
             stmt.setString(1, tradeId);
             ResultSet resultSet = stmt.executeQuery();
             if(resultSet.next()) {
                 String payload = resultSet.getString(1);
                 String[] payloads = payload.split(",");
-                System.out.println("result journal"+ payload);
-//                lookUpStatement.setString(1,payloads[3]);
-//                ResultSet lookUpResult = lookUpStatement.executeQuery();
-//                if(!lookUpResult.next()) {
-//                    System.out.println("No security found....");
-//                    continue;
-//                }
+//                System.out.println("result journal"+ payload);
+                lookUpStatement.setString(1,payloads[3]);
+                ResultSet lookUpResult = lookUpStatement.executeQuery();
+                if(!lookUpResult.next()) {
+                    System.out.println("No security found....");
+                    continue;
+                }
                 insertStatement.setString(1, payloads[0]);
                 insertStatement.setString(2, payloads[1]);
                 insertStatement.setString(3, payloads[2]);
