@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class PositionRepository {
     // Get the current version of the account for optimistic locking
-    public static int getAccountVersion(Connection connection, String cusip) throws SQLException {
+    public static int getCusipVersion(Connection connection, String cusip) throws SQLException {
         String query = "SELECT version FROM positions WHERE cusip = ?";
         PreparedStatement stmt = connection.prepareStatement(query);
         stmt.setString(1, cusip);
@@ -55,14 +55,13 @@ public class PositionRepository {
         positionStatement.setString(1, journalEntry.getCusip());
         ResultSet resultSet = positionStatement.executeQuery();
         if(resultSet.next()) {
-            if(journalEntry.getDirection().equals("BUY")){
+            if(journalEntry.getDirection().equalsIgnoreCase("BUY")){
             stmt.setDouble(1, resultSet.getInt(1) + journalEntry.getPosition());
             } else {
                 stmt.setDouble(1, resultSet.getInt(1) - journalEntry.getPosition());
             }
             stmt.setString(2, journalEntry.getCusip());
             stmt.setInt(3, version);
-
 
             int rowsUpdated = stmt.executeUpdate();
             if (rowsUpdated == 0) {

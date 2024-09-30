@@ -10,7 +10,7 @@ public class Main {
 //        new TradeCsvChunkGenerator().generateChunk("/Users/Suraj.Adhikari/downloads/trades.csv");
         new TradeCsvChunkGenerator().generateChunk("C:\\Users\\suraj\\Downloads\\csv\\trades.csv");
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
-        CyclicBarrier barrier = new CyclicBarrier(10, () -> System.out.println("All chunks processed. Starting consumer threads."));
+        CyclicBarrier barrier = new CyclicBarrier(10);
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, barrier);
         tradeCsvChunkProcessor.processChunks();
 

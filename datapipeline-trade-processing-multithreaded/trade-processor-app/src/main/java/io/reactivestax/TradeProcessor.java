@@ -11,7 +11,7 @@ import static io.reactivestax.PositionRepository.*;
 public class TradeProcessor implements Runnable {
     public LinkedBlockingQueue<String> queue;
     static Connection connection;
-    private HikariDataSource dataSource = DataSource.getDataSource();
+    private final HikariDataSource dataSource = DataSource.getDataSource();
 
     static {
         try {
@@ -78,11 +78,11 @@ public class TradeProcessor implements Runnable {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
             try {
-                // Step 1: Check if account exists
-                int version = getAccountVersion(connection, journalEntry.getCusip());
+                // Step 1: Check if cusip exists
+                int version = getCusipVersion(connection, journalEntry.getCusip());
 
                 if (version == -1) {
-                    // Step 2: If no account exists, insert it
+                    // Step 2: If no positions exists, insert it
                     insertPosition(connection, journalEntry);
                 }
                 // Step 3: Now update with optimistic locking

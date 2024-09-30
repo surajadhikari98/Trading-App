@@ -134,7 +134,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     @Override
     public void writeToTradeQueue(String[] trade) throws InterruptedException {
-        int queueNumber = queueDistributorMap.computeIfAbsent(trade[2], k -> currentQueueIndex.incrementAndGet() % 3 + 1);
+        // Get the queue number, or assign one in a round-robin manner if not already assigned
+        int queueNumber = queueDistributorMap.computeIfAbsent(trade[2], k -> (currentQueueIndex.incrementAndGet() % 3) + 1); //generate 1,2,3
         selectQueue(trade[0], queueNumber);
         System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
     }
