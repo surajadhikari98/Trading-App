@@ -13,11 +13,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap();
-    static LinkedBlockingQueue<String> queue1 = new LinkedBlockingQueue<>();
-    static LinkedBlockingQueue<String> queue2 = new LinkedBlockingQueue<>();
-    static LinkedBlockingQueue<String> queue3 = new LinkedBlockingQueue<>();
+    static LinkedBlockingDeque<String> queue1 = new LinkedBlockingDeque<>();
+    static LinkedBlockingDeque<String> queue2 = new LinkedBlockingDeque<>();
+    static LinkedBlockingDeque<String> queue3 = new LinkedBlockingDeque<>();
     static AtomicInteger currentQueueIndex = new AtomicInteger(0);
-    private CyclicBarrier barrier;
 
     static {
         try {

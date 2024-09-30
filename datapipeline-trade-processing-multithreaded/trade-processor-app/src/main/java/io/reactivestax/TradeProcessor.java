@@ -4,13 +4,15 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.reactivestax.hikari.DataSource;
 
 import java.sql.*;
-import java.util.concurrent.LinkedBlockingQueue;
-
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 import static io.reactivestax.PositionRepository.*;
 
 public class TradeProcessor implements Runnable {
-    public LinkedBlockingQueue<String> queue;
+    public LinkedBlockingDeque<String> dequeue;
     static Connection connection;
+    Map<String, Integer> retryMapper =    new ConcurrentHashMap<String, Integer>();
     private final HikariDataSource dataSource = DataSource.getDataSource();
 
     static {
@@ -21,8 +23,8 @@ public class TradeProcessor implements Runnable {
         }
     }
 
-    public TradeProcessor(LinkedBlockingQueue<String> queue) throws Exception {
-        this.queue =queue;
+    public TradeProcessor(LinkedBlockingDeque<String> dequeue) throws Exception {
+        this.dequeue = dequeue;
     }
 
     @Override
@@ -35,8 +37,8 @@ public class TradeProcessor implements Runnable {
     }
 
     public void readFromQueueAndQueryPayload() throws InterruptedException, SQLException {
-        while(!this.queue.isEmpty()) {
-            String tradeId = this.queue.take();
+        while(!this.dequeue.isEmpty()) {
+            String tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
             String lookupQueryForSecurity = "SELECT * FROM securities_reference WHERE cusip = ?";
@@ -49,7 +51,7 @@ public class TradeProcessor implements Runnable {
                 String payload = resultSet.getString(1);
                 String[] payloads = payload.split(",");
                 JournalEntry journalEntry = new JournalEntry(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-//                System.out.println("result journal"+ payload);
+                System.out.println("result journal"+ payload);
                 lookUpStatement.setString(1,payloads[3]);
                 ResultSet lookUpResult = lookUpStatement.executeQuery();
                 if(!lookUpResult.next()) {
@@ -87,17 +89,28 @@ public class TradeProcessor implements Runnable {
                 } else {
                     updatePosition(connection, journalEntry, version);
                 }
-            } catch (
-                    OptimisticLockingException e) {
+            } catch (OptimisticLockingException e) {
                 System.err.println(e.getMessage() + journalEntry.getPosition());
-//                creditCardTransactionQueue.put(journalEntry);
-//                adjustTransactionQueue(journalEntry);
+                //logic for the retry count
+                if(mappingForRetryCount(journalEntry) < 3){
+                    this.dequeue.addLast(journalEntry.getTradeIdentifier());
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public int mappingForRetryCount(JournalEntry journalEntry) {
+        int errorCount;
+        errorCount = retryMapper.putIfAbsent(journalEntry.getTradeIdentifier(), 1);
+
+        if(retryMapper.get(journalEntry.getTradeIdentifier()) != null) {
+            errorCount = retryMapper.compute(journalEntry.getTradeIdentifier(), (k, i) -> i + 1);
+        }
+        return errorCount;
     }
 
 

@@ -29,7 +29,7 @@ public class PositionRepository {
         stmt.setString(2, journalEntry.getCusip());
         stmt.setDouble(3,  journalEntry.getQuantity());
         stmt.executeUpdate();
-//        System.out.println("New position for " + journalEntry.getAccountNumber() + "is: " + journalEntry.getPosition());
+        System.out.println("New position for " + journalEntry.getAccountNumber() + "is: " + journalEntry.getPosition());
         connection.commit();
         connection.setAutoCommit(true);
     }
