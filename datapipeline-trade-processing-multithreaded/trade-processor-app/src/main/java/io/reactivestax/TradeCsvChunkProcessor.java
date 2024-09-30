@@ -27,32 +27,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, CyclicBarrier barrier) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
-        this.barrier = barrier;
     }
-
-//    public void processChunks() {
-//        try {
-//            for (int i = 0; i <= 10; i++) {
-//                String chunkFileName = "trades_chunk_" + i + ".csv";
-//                chunkProcessorThreadPool.submit(() -> {
-//                    try {
-//                        processChunkFiles(chunkFileName);
-//                    } catch (IOException | SQLException | InterruptedException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                });
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        } finally {
-//            System.out.println("done insertion in the trade payload");
-////            chunkProcessorThreadPool.shutdown();
-//        }
-//    }
-
 
     public void processChunks() {
         try {
@@ -63,12 +41,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                         processChunkFiles(chunkFileName);
                     } catch (IOException | SQLException | InterruptedException e) {
                         throw new RuntimeException(e);
-                    } finally {
-                        try {
-                            barrier.await();
-                        } catch (InterruptedException | BrokenBarrierException e) {
-                            throw new RuntimeException(e);
-                        }
                     }
                 });
             }
@@ -94,9 +66,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         //maintain the Map for inserting into the queue
     }
 
-    private int insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
-//        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/boca-bc24-java-core-problems/src/problems/thread/distributedtrade/tradefiles/";
-        String filePath = "C:\\Users\\suraj\\source\\full-stack-student-mode\\suad-bootcamp-2024\\datapipeline-trade-processing-multithreaded\\trade-processor-app\\src\\main\\java\\io\\reactivestax\\files\\";
+    private void insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
+        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/datapipeline-trade-processing-multithreaded/trade-processor-app/src/main/java/io/reactivestax/files/";
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
         PreparedStatement statement = connection.prepareStatement(insertQuery);
         String line;
@@ -108,11 +79,11 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 statement.setString(2, checkValidity(split) ? "valid" : "inValid");
                 statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
                 statement.setString(4, line);
-                statement.addBatch();
+                statement.executeUpdate();
                 writeToTradeQueue(split);
             }
-            int[] ints = statement.executeBatch();
-            return ints.length;
+//            int[] ints = statement.executeBatch();
+//            return ints.length;
         }
     }
 
@@ -159,10 +130,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     public void startMultiThreadsForReadingFromQueue(ExecutorService executorService) throws Exception {
-            executorService.submit(new TradeProcessor(queue1));
-            executorService.submit(new TradeProcessor(queue2));
-            executorService.submit( new TradeProcessor(queue3));
-            executorService.shutdown();
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        executorService.submit(new TradeProcessor(queue1));
+        executorService.submit(new TradeProcessor(queue2));
+        executorService.submit(new TradeProcessor(queue3));
+        executorService.shutdown();
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
     }
 }

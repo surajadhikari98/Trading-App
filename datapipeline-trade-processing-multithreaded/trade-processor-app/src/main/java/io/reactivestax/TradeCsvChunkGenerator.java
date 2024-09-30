@@ -32,8 +32,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
         //creating the chunks and submitting to the executorService
         AtomicInteger startLine = new AtomicInteger(1);
         for (int i = 0; i < numberOfChunks; i++) {
-//            String outputFile = "C:/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/datapipeline-trade-processing-multithreaded/trade-processor-app/src/main/java/io/reactivestax/tradefiles/" + "trades_chunk_" + (i + 1) + ".csv";
-            String outputFile = "C:\\Users\\suraj\\source\\full-stack-student-mode\\suad-bootcamp-2024\\datapipeline-trade-processing-multithreaded\\trade-processor-app\\src\\main\\java\\io\\reactivestax\\tradefiles\\" + "trades_chunk_" + (i + 1) + ".csv";
+            String outputFile = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/datapipeline-trade-processing-multithreaded/trade-processor-app/src/main/java/io/reactivestax/files/" + "trades_chunk_" + (i + 1) + ".csv";
             executorService.submit(() -> {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {

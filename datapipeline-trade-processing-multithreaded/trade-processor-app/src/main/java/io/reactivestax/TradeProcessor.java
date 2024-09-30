@@ -79,14 +79,14 @@ public class TradeProcessor implements Runnable {
 
             try {
                 // Step 1: Check if cusip exists
-                int version = getCusipVersion(connection, journalEntry.getCusip());
+                int version = getCusipVersion(connection, journalEntry);
 
                 if (version == -1) {
                     // Step 2: If no positions exists, insert it
                     insertPosition(connection, journalEntry);
+                } else {
+                    updatePosition(connection, journalEntry, version);
                 }
-                // Step 3: Now update with optimistic locking
-                updatePosition(connection, journalEntry, version);
             } catch (
                     OptimisticLockingException e) {
                 System.err.println(e.getMessage() + journalEntry.getPosition());
