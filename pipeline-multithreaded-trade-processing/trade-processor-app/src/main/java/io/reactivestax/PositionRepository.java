@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class PositionRepository {
-    // Get the current version of the account for optimistic locking
     public static int getCusipVersion(Connection connection, JournalEntry journalEntry) throws SQLException {
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
         PreparedStatement stmt = connection.prepareStatement(query);
@@ -20,7 +19,6 @@ public class PositionRepository {
         }
     }
 
-    // Insert a new account for a credit card number
     public static void insertPosition(Connection connection, JournalEntry journalEntry) throws SQLException {
         connection.setAutoCommit(false);
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
@@ -56,7 +54,6 @@ public class PositionRepository {
 
             int rowsUpdated = stmt.executeUpdate();
             if (rowsUpdated == 0) {
-                // Optimistic locking failed, retry
                 connection.rollback();
                 throw new OptimisticLockingException("Optimistic locking failed, retrying transaction...");
             }
