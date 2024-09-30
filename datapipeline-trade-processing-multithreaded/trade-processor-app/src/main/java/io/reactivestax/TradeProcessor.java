@@ -4,14 +4,17 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.reactivestax.hikari.DataSource;
 
 import java.sql.*;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.reactivestax.PositionRepository.*;
 
 public class TradeProcessor implements Runnable {
-    public LinkedBlockingQueue<String> queue;
+    public LinkedBlockingDeque<String> queue;
+    public LinkedBlockingDeque<String> deadQueue;
     static Connection connection;
     private final HikariDataSource dataSource = DataSource.getDataSource();
+    static int retryCounter = 0;
 
     static {
         try {
@@ -21,7 +24,7 @@ public class TradeProcessor implements Runnable {
         }
     }
 
-    public TradeProcessor(LinkedBlockingQueue<String> queue) throws Exception {
+    public TradeProcessor(LinkedBlockingDeque<String> queue) throws Exception {
         this.queue =queue;
     }
 
@@ -90,12 +93,16 @@ public class TradeProcessor implements Runnable {
             } catch (
                     OptimisticLockingException e) {
                 System.err.println(e.getMessage() + journalEntry.getPosition());
-//                creditCardTransactionQueue.put(journalEntry);
-//                adjustTransactionQueue(journalEntry);
+                this.queue.putLast(journalEntry.getTradeIdentifier());
+                retryCounter++;
+                if(retryCounter ==3){
+                    deadQueue.put(journalEntry.getTradeIdentifier());
+                    retryCounter = 0;
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        } catch (SQLException e) {
+        } catch (SQLException | InterruptedException e) {
             e.printStackTrace();
         }
     }
