@@ -8,21 +8,9 @@ public class JournalEntry {
     private String direction;
     private Integer quantity;
     private Double price;
+    private Integer position;
 
-    @Override
-    public String toString() {
-        return "JournalEntry{" +
-                "tradeIdentifier='" + tradeIdentifier + '\'' +
-                ", tradeDateTime='" + tradeDateTime + '\'' +
-                ", accountNumber='" + accountNumber + '\'' +
-                ", cusip='" + cusip + '\'' +
-                ", direction='" + direction + '\'' +
-                ", quantity=" + quantity +
-                ", price=" + price +
-                '}';
-    }
-
-    public JournalEntry(String tradeIdentifier, String tradeDateTime, String accountNumber, String cusip, String direction, Integer quantity, Double price) {
+    public JournalEntry(String tradeIdentifier, String tradeDateTime, String accountNumber, String cusip, String direction, Integer quantity, Double price,  Integer position) {
         this.tradeIdentifier = tradeIdentifier;
         this.tradeDateTime = tradeDateTime;
         this.accountNumber = accountNumber;
@@ -30,6 +18,7 @@ public class JournalEntry {
         this.direction = direction;
         this.quantity = quantity;
         this.price = price;
+        this.position = position;
     }
 
     public String getTradeIdentifier() {
@@ -70,6 +59,14 @@ public class JournalEntry {
 
     public void setDirection(String direction) {
         this.direction = direction;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
     }
 
     public Integer getQuantity() {
