@@ -14,7 +14,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
 
     static {
             Properties properties = new Properties();
-            String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/application.properties";
+            String filePath ="/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/application.properties";
             try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
                 properties.load(fileInputStream);
                 String chunksNumber = properties.getProperty("chunks.number");

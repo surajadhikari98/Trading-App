@@ -13,7 +13,7 @@ import static io.reactivestax.PositionRepository.*;
 public class TradeProcessor implements Runnable {
     public LinkedBlockingDeque<String> dequeue;
     static Connection connection;
-    Map<String, Integer> retryMapper = new ConcurrentHashMap<String, Integer>();
+    Map<String, Integer> retryMapper = new ConcurrentHashMap<>();
     private final HikariDataSource dataSource = DataSource.getDataSource();
 
     static {
@@ -42,7 +42,7 @@ public class TradeProcessor implements Runnable {
             String tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            String lookupQueryForSecurity = "SELECT * FROM securities_reference WHERE cusip = ?";
+            String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
             PreparedStatement stmt = connection.prepareStatement(lookupQuery);
             PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
             PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);
@@ -106,6 +106,7 @@ public class TradeProcessor implements Runnable {
 
     public int mappingForRetryCount(JournalEntry journalEntry) {
         int errorCount;
+
         errorCount = retryMapper.putIfAbsent(journalEntry.getTradeIdentifier(), 1);
 
         if (retryMapper.get(journalEntry.getTradeIdentifier()) != null) {

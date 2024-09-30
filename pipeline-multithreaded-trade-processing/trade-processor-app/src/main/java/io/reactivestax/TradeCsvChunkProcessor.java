@@ -37,34 +37,23 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 String chunkFileName = "trades_chunk_" + i + ".csv";
                 chunkProcessorThreadPool.submit(() -> {
                     try {
-                        processChunkFiles(chunkFileName);
+                        insertIntoTradePayload(chunkFileName);
                     } catch (IOException | SQLException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 });
             }
+            System.out.println("queue1 size" + queue1.size());
+            System.out.println("queue2 size" + queue2.size());
+            System.out.println("queue3 size" + queue3.size());
+            System.out.println("Map size" + queueDistributorMap.size());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-
-    public void processChunkFiles(String fileName) throws IOException, SQLException, InterruptedException {
-        try {
-            insertIntoTradePayload(fileName);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("queue1 size" + queue1.size());
-        System.out.println("queue2 size" + queue2.size());
-        System.out.println("queue3 size" + queue3.size());
-        System.out.println("Map size" + queueDistributorMap.size());
     }
 
     private void insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
-        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/datapipeline-trade-processing-multithreaded/trade-processor-app/src/main/java/io/reactivestax/files/";
+        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/java/io/reactivestax/files/";
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
         PreparedStatement statement = connection.prepareStatement(insertQuery);
         String line;
@@ -79,8 +68,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 statement.executeUpdate();
                 writeToTradeQueue(split);
             }
-//            int[] ints = statement.executeBatch();
-//            return ints.length;
         }
     }
 
@@ -129,6 +116,5 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         executorService.submit(new TradeProcessor(queue2));
         executorService.submit(new TradeProcessor(queue3));
         executorService.shutdown();
-        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
     }
 }
