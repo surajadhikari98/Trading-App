@@ -3,13 +3,26 @@ package io.reactivestax;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TradeCsvChunkGenerator implements ChunkGenerator {
 
-    static int numberOfChunks = 10;
+    static Integer numberOfChunks;
+
+    static {
+            Properties properties = new Properties();
+            String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/application.properties";
+            try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
+                properties.load(fileInputStream);
+                String chunksNumber = properties.getProperty("chunks.number");
+                numberOfChunks = Integer.parseInt(chunksNumber);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+    }
 
     public void generateChunk(String filePath) throws FileNotFoundException {
         List<String> lines = new ArrayList<>();

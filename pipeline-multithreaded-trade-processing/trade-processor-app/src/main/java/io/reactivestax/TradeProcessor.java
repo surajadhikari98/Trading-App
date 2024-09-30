@@ -7,12 +7,13 @@ import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+
 import static io.reactivestax.PositionRepository.*;
 
 public class TradeProcessor implements Runnable {
     public LinkedBlockingDeque<String> dequeue;
     static Connection connection;
-    Map<String, Integer> retryMapper =    new ConcurrentHashMap<String, Integer>();
+    Map<String, Integer> retryMapper = new ConcurrentHashMap<String, Integer>();
     private final HikariDataSource dataSource = DataSource.getDataSource();
 
     static {
@@ -37,7 +38,7 @@ public class TradeProcessor implements Runnable {
     }
 
     public void readFromQueueAndQueryPayload() throws InterruptedException, SQLException {
-        while(!this.dequeue.isEmpty()) {
+        while (!this.dequeue.isEmpty()) {
             String tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -47,14 +48,14 @@ public class TradeProcessor implements Runnable {
             PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);
             stmt.setString(1, tradeId);
             ResultSet resultSet = stmt.executeQuery();
-            if(resultSet.next()) {
+            if (resultSet.next()) {
                 String payload = resultSet.getString(1);
                 String[] payloads = payload.split(",");
                 JournalEntry journalEntry = new JournalEntry(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-                System.out.println("result journal"+ payload);
-                lookUpStatement.setString(1,payloads[3]);
+                System.out.println("result journal" + payload);
+                lookUpStatement.setString(1, payloads[3]);
                 ResultSet lookUpResult = lookUpStatement.executeQuery();
-                if(!lookUpResult.next()) {
+                if (!lookUpResult.next()) {
                     System.out.println("No security found....");
                     continue;
                 }
@@ -67,7 +68,7 @@ public class TradeProcessor implements Runnable {
                 insertStatement.setString(7, payloads[6]);
                 int i = insertStatement.executeUpdate();
                 processPosition(journalEntry);
-                System.out.println("insertionResult "+ i);
+                System.out.println("insertionResult " + i);
             }
 
         }
@@ -92,7 +93,7 @@ public class TradeProcessor implements Runnable {
             } catch (OptimisticLockingException e) {
                 System.err.println(e.getMessage() + journalEntry.getPosition());
                 //logic for the retry count
-                if(mappingForRetryCount(journalEntry) < 3){
+                if (mappingForRetryCount(journalEntry) < 3) {
                     this.dequeue.addLast(journalEntry.getTradeIdentifier());
                 }
             } catch (SQLException e) {
@@ -107,7 +108,7 @@ public class TradeProcessor implements Runnable {
         int errorCount;
         errorCount = retryMapper.putIfAbsent(journalEntry.getTradeIdentifier(), 1);
 
-        if(retryMapper.get(journalEntry.getTradeIdentifier()) != null) {
+        if (retryMapper.get(journalEntry.getTradeIdentifier()) != null) {
             errorCount = retryMapper.compute(journalEntry.getTradeIdentifier(), (k, i) -> i + 1);
         }
         return errorCount;

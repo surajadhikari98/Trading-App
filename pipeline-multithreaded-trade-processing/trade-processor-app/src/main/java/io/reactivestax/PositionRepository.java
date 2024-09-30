@@ -27,7 +27,7 @@ public class PositionRepository {
         PreparedStatement stmt = connection.prepareStatement(insertQuery);
         stmt.setString(1, journalEntry.getAccountNumber());
         stmt.setString(2, journalEntry.getCusip());
-        stmt.setDouble(3,  journalEntry.getQuantity());
+        stmt.setDouble(3, journalEntry.getQuantity());
         stmt.executeUpdate();
         System.out.println("New position for " + journalEntry.getAccountNumber() + "is: " + journalEntry.getPosition());
         connection.commit();
@@ -44,9 +44,9 @@ public class PositionRepository {
         positionStatement.setString(1, journalEntry.getAccountNumber());
         positionStatement.setString(2, journalEntry.getCusip());
         ResultSet resultSet = positionStatement.executeQuery();
-        if(resultSet.next()) {
-            if(journalEntry.getDirection().equalsIgnoreCase("BUY")){
-            stmt.setDouble(1, resultSet.getInt(1) + journalEntry.getPosition());
+        if (resultSet.next()) {
+            if (journalEntry.getDirection().equalsIgnoreCase("BUY")) {
+                stmt.setDouble(1, resultSet.getInt(1) + journalEntry.getPosition());
             } else {
                 stmt.setDouble(1, resultSet.getInt(1) - journalEntry.getPosition());
             }

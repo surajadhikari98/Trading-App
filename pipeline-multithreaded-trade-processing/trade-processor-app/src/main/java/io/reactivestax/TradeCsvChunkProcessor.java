@@ -57,12 +57,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-//        System.out.println("Succefully inserted into db." + insertIntoTradePayload(fileName));
         System.out.println("queue1 size" + queue1.size());
         System.out.println("queue2 size" + queue2.size());
         System.out.println("queue3 size" + queue3.size());
         System.out.println("Map size" + queueDistributorMap.size());
-        //maintain the Map for inserting into the queue
     }
 
     private void insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
@@ -98,8 +96,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 //            Integer queueNumber = queueDistributorMap.get(trade[2]);
 //            selectQueue(trade[0], queueNumber);
 //        }
-//
-//
 //    }
 
     @Override
