@@ -71,20 +71,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-//    @Override
-//    public void writeToTradeQueue(String[] trade) throws InterruptedException {
-//        if (queueDistributorMap.get(trade[2]) == null) {
-//            int queueNumber = ThreadLocalRandom.current().nextInt(1, 4); //generating the random no from 1 to 3 in thread safe manner
-//            queueDistributorMap.putIfAbsent(trade[2], queueNumber);
-//            selectQueue(trade[0], queueNumber);
-//        }
-//        //consulting with the map for the insertion in the array blocking queue
-//        if (queueDistributorMap.get(trade[2]) != null) {
-//            Integer queueNumber = queueDistributorMap.get(trade[2]);
-//            selectQueue(trade[0], queueNumber);
-//        }
-//    }
-
     @Override
     public void writeToTradeQueue(String[] trade) throws InterruptedException {
         // Get the queue number, or assign one in a round-robin manner if not already assigned
