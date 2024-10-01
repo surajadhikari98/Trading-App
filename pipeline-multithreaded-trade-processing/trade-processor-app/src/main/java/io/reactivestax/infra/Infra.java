@@ -9,9 +9,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Infra {
 
-//    private List<LinkedBlockingDeque<String>> queues = new ArrayList<>();
+    private List<LinkedBlockingDeque<String>> queueList = new ArrayList<>();
     private static final Map<String, LinkedBlockingDeque<String>> queueMap = new HashMap<>();
     private static final LinkedBlockingQueue<String> chunksFileMappingQueue = new LinkedBlockingQueue<>();
+     private static final String queuesNumber;
+
+    static {
+        try {
+            queuesNumber = readFromApplicationProperties("numberOfQueues");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String readFromApplicationProperties(String propertyName) throws FileNotFoundException {
         Properties properties = new Properties();
@@ -26,13 +35,19 @@ public class Infra {
 
     //number of queue begin with 0;
     //Make sure to call this method to get the queues before launching the queues in chunkProcessor.
-    public static Map<String, LinkedBlockingDeque<String>> addToQueueMap() throws FileNotFoundException {
-        String queuesNumber = readFromApplicationProperties("numberOfQueues");
+    public static Map<String, LinkedBlockingDeque<String>> addToQueueMap() {
         for (int i = 0; i < Integer.parseInt(queuesNumber); i++) {
             String name = "queues" + i;
             queueMap.put(name, new LinkedBlockingDeque<>());
         }
         return queueMap;
+    }
+
+    public List<LinkedBlockingDeque<String>> addToQueueList() {
+        for (int i = 0; i < Integer.parseInt(queuesNumber); i++) {
+            this.queueList.add(new LinkedBlockingDeque<>());
+        }
+        return queueList;
     }
 
     public static LinkedBlockingQueue<String> getChunksFileMappingQueue() {

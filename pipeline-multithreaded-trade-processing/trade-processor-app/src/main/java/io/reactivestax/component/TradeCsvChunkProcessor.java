@@ -7,7 +7,6 @@ import io.reactivestax.infra.Infra;
 import java.io.*;
 import java.sql.*;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,11 +82,12 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     @Override
+    // Get the queue number, or assign one in a round-robin manner if not already assigned
     public void writeToTradeQueue(String[] trade) throws InterruptedException, FileNotFoundException {
-        // Get the queue number, or assign one in a round-robin manner if not already assigned
         String distributionCriteria = Infra.readFromApplicationProperties("tradeDistributionCriteria");
         //checking the distributionCriteria from Application.properties
-        int queueNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0], k -> (currentQueueIndex.incrementAndGet() % 3) + 1); //generate 1,2,3
+        int queueNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
+                k -> (currentQueueIndex.incrementAndGet() % 3) + 1); //generate 1,2,3
         selectQueue(trade[0], queueNumber);
         System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
     }
@@ -103,6 +103,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
             case 3:
                 queue3.put(tradeId);
                 break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + queueNumber);
         }
     }
 
@@ -110,7 +112,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         return (split[0]) != null;
     }
 
-    public void startMultiThreadsForReadingFromQueue(ExecutorService executorService) throws Exception {
+    public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
         executorService.submit(new CsvTradeProcessor(queue1));
         executorService.submit(new CsvTradeProcessor(queue2));
         executorService.submit(new CsvTradeProcessor(queue3));

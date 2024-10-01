@@ -14,15 +14,15 @@ public class Main {
         new TradeCsvChunkGenerator().generateChunk(Infra.readFromApplicationProperties("tradeFilePath"));
 
 
-        //Process chunks
-        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
+        //process chunks
+        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationProperties("chunkProcessorThreadPoolSize")));
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, Infra.addToQueueMap());
         tradeCsvChunkProcessor.processChunks();
 
 
         //process trades
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
-        tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue(executorService);
+        ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationProperties("tradeProcessorThreadPoolSize")));
+        tradeCsvChunkProcessor.startMultiThreadsForTradeProcessor(executorService);
 
     }
 }
