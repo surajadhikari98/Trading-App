@@ -1,4 +1,4 @@
-package io.reactivestax;
+package io.reactivestax.contract;
 
 import java.sql.SQLException;
 

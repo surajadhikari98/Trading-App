@@ -1,9 +1,11 @@
-package io.reactivestax;
+package io.reactivestax.component;
 
+import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.hikari.DataSource;
 
 import java.io.*;
 import java.sql.*;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -12,7 +14,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     static Connection connection;
     int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
-    static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap();
+    static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
+    Map<String, LinkedBlockingDeque<String>> queueTracker;
     static LinkedBlockingDeque<String> queue1 = new LinkedBlockingDeque<>();
     static LinkedBlockingDeque<String> queue2 = new LinkedBlockingDeque<>();
     static LinkedBlockingDeque<String> queue3 = new LinkedBlockingDeque<>();
@@ -26,9 +29,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, Map<String, LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
+        this.queueTracker = queueTracker;
     }
 
     public void processChunks() {
@@ -43,17 +47,20 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                     }
                 });
             }
-            System.out.println("queue1 size" + queue1.size());
-            System.out.println("queue2 size" + queue2.size());
-            System.out.println("queue3 size" + queue3.size());
-            System.out.println("Map size" + queueDistributorMap.size());
+            System.out.println("queue 1 size" + queue1.size());
+            System.out.println("queue 2 size" + queue2.size());
+            System.out.println("queue 3 size" + queue3.size());
+
+//            for (int i = 0; i < queueTracker.size(); i++) {
+//                System.out.println(queueTracker.get("queue"+i) + "queue1 size" + queueTracker.get("queue"+i).size());
+//            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private void insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
-        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/java/io/reactivestax/files/";
+        String filePath = "src/main/java/io/reactivestax/files/";
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
         PreparedStatement statement = connection.prepareStatement(insertQuery);
         String line;

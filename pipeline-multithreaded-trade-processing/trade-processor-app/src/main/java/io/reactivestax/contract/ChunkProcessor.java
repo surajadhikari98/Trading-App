@@ -1,4 +1,4 @@
-package io.reactivestax;
+package io.reactivestax.contract;
 
 
 public interface ChunkProcessor {

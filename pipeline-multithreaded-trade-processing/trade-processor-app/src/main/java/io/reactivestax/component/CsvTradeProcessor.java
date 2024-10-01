@@ -1,6 +1,7 @@
-package io.reactivestax;
+package io.reactivestax.component;
 
 import com.zaxxer.hikari.HikariDataSource;
+import io.reactivestax.contract.TradeProcessor;
 import io.reactivestax.domain.JournalEntry;
 import io.reactivestax.exception.OptimisticLockingException;
 import io.reactivestax.hikari.DataSource;

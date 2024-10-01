@@ -1,30 +1,19 @@
-package io.reactivestax;
+package io.reactivestax.component;
+
+import io.reactivestax.contract.ChunkGenerator;
+import io.reactivestax.infra.Infra;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TradeCsvChunkGenerator implements ChunkGenerator {
 
-    static Integer numberOfChunks;
-
-    static {
-            Properties properties = new Properties();
-            String filePath ="/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/application.properties";
-            try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
-                properties.load(fileInputStream);
-                String chunksNumber = properties.getProperty("chunks.number");
-                numberOfChunks = Integer.parseInt(chunksNumber);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-    }
-
     public void generateChunk(String filePath) throws FileNotFoundException {
+        Integer numberOfChunks = Infra.readFromApplicationProperties("chunks.number");
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
