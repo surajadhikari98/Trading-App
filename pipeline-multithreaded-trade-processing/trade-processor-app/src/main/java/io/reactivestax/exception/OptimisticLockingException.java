@@ -1,4 +1,4 @@
-package io.reactivestax;
+package io.reactivestax.exception;
 
 // Custom exception for optimistic locking failure
 public class OptimisticLockingException extends RuntimeException {

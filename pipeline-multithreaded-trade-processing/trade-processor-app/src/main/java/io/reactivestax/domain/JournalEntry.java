@@ -1,4 +1,4 @@
-package io.reactivestax;
+package io.reactivestax.domain;
 
 public class JournalEntry {
     private String tradeIdentifier;

@@ -1,4 +1,7 @@
-package io.reactivestax;
+package io.reactivestax.repository;
+
+import io.reactivestax.domain.JournalEntry;
+import io.reactivestax.exception.OptimisticLockingException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

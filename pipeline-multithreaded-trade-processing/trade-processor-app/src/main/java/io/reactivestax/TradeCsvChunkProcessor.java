@@ -98,9 +98,9 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     public void startMultiThreadsForReadingFromQueue(ExecutorService executorService) throws Exception {
-        executorService.submit(new TradeProcessor(queue1));
-        executorService.submit(new TradeProcessor(queue2));
-        executorService.submit(new TradeProcessor(queue3));
+        executorService.submit(new CsvTradeProcessor(queue1));
+        executorService.submit(new CsvTradeProcessor(queue2));
+        executorService.submit(new CsvTradeProcessor(queue3));
         executorService.shutdown();
     }
 }
