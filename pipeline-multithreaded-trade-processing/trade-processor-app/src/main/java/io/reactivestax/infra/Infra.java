@@ -9,7 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Infra {
 
-    private List<LinkedBlockingDeque<String>> queueList = new ArrayList<>();
+    private static List<LinkedBlockingDeque<String>> queueList = new ArrayList<>();
     private static final Map<String, LinkedBlockingDeque<String>> queueMap = new HashMap<>();
     private static final LinkedBlockingQueue<String> chunksFileMappingQueue = new LinkedBlockingQueue<>();
      private static final String queuesNumber;
@@ -43,9 +43,9 @@ public class Infra {
         return queueMap;
     }
 
-    public List<LinkedBlockingDeque<String>> addToQueueList() {
+    public static List<LinkedBlockingDeque<String>> addToQueueList() {
         for (int i = 0; i < Integer.parseInt(queuesNumber); i++) {
-            this.queueList.add(new LinkedBlockingDeque<>());
+            queueList.add(new LinkedBlockingDeque<>());
         }
         return queueList;
     }

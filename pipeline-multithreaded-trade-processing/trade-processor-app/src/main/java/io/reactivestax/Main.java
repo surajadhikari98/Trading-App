@@ -4,8 +4,10 @@ import io.reactivestax.component.TradeCsvChunkGenerator;
 import io.reactivestax.component.TradeCsvChunkProcessor;
 import io.reactivestax.infra.Infra;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class Main {
 
@@ -15,8 +17,9 @@ public class Main {
 
 
         //process chunks
+        List<LinkedBlockingDeque<String>> linkedBlockingDeques = Infra.addToQueueList();
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationProperties("chunkProcessorThreadPoolSize")));
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, Infra.addToQueueMap());
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, linkedBlockingDeques);
         tradeCsvChunkProcessor.processChunks();
 
 

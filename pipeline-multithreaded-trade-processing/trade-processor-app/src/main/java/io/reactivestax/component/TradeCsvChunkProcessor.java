@@ -6,6 +6,7 @@ import io.reactivestax.infra.Infra;
 
 import java.io.*;
 import java.sql.*;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,7 +17,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
-    Map<String, LinkedBlockingDeque<String>> queueTracker;
+//    Map<String, LinkedBlockingDeque<String>> queueTracker;
+    List<LinkedBlockingDeque<String>> queueTracker;
     static LinkedBlockingDeque<String> queue1 = new LinkedBlockingDeque<>();
     static LinkedBlockingDeque<String> queue2 = new LinkedBlockingDeque<>();
     static LinkedBlockingDeque<String> queue3 = new LinkedBlockingDeque<>();
@@ -30,7 +32,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, Map<String, LinkedBlockingDeque<String>> queueTracker) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, List<LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
         this.queueTracker = queueTracker;
@@ -50,12 +52,12 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                     }
                 });
             }
-            System.out.println("queue 1 size" + queue1.size());
-            System.out.println("queue 2 size" + queue2.size());
-            System.out.println("queue 3 size" + queue3.size());
+//            System.out.println("queue 1 size" + queue1.size());
+//            System.out.println("queue 2 size" + queue2.size());
+//            System.out.println("queue 3 size" + queue3.size());
 
 //            for (int i = 0; i < queueTracker.size(); i++) {
-//                System.out.println(queueTracker.get("queue"+i) + "queue1 size" + queueTracker.get("queue"+i).size());
+//                System.out.println(queueTracker.get("queues"+i) + "size" + queueTracker.get("queues"+i).size());
 //            }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -113,9 +115,15 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
-        executorService.submit(new CsvTradeProcessor(queue1));
-        executorService.submit(new CsvTradeProcessor(queue2));
-        executorService.submit(new CsvTradeProcessor(queue3));
+        for (int i = 0; i < queueTracker.size(); i++) {
+//            executorService.submit(new CsvTradeProcessor(queueTracker.get("queues"+i)));
+//            System.out.println("queues" + i  + queueTracker.get("queues"+ i).size());
+            CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(queueTracker.get(i));
+            executorService.submit(csvTradeProcessor);
+            System.out.println("queues" + i  + "size is : " + queueTracker.get(i).size());
+        }
+//        executorService.submit(new CsvTradeProcessor(queue2));
+//        executorService.submit(new CsvTradeProcessor(queue3));
         executorService.shutdown();
     }
 }
