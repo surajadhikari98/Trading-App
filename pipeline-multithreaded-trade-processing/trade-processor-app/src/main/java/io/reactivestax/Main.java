@@ -4,21 +4,19 @@ import io.reactivestax.component.TradeCsvChunkGenerator;
 import io.reactivestax.component.TradeCsvChunkProcessor;
 import io.reactivestax.infra.Infra;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         //start chunkGenerator
         new TradeCsvChunkGenerator().generateChunk(Infra.readFromApplicationProperties("tradeFilePath"));
-        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
+
 
         //Process chunks
-        Map<String, LinkedBlockingDeque<String>> queueMap = Infra.addToQueueMap();
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, queueMap);
+        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, Infra.addToQueueMap());
         tradeCsvChunkProcessor.processChunks();
 
 

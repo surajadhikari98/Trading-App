@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TradeCsvChunkGenerator implements ChunkGenerator {
 
     public void generateChunk(String filePath) throws FileNotFoundException {
-        Integer numberOfChunks = Infra.readFromApplicationProperties("numberOfChunks");
+        int numberOfChunks = Integer.parseInt(Infra.readFromApplicationProperties("numberOfChunks"));
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -34,7 +34,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
         //creating the chunks and submitting to the executorService
         AtomicInteger startLine = new AtomicInteger(1);
         for (int i = 0; i < numberOfChunks; i++) {
-            String outputFile = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/datapipeline-trade-processing-multithreaded/trade-processor-app/src/main/java/io/reactivestax/files/" + "trades_chunk_" + (i + 1) + ".csv";
+            String outputFile = "src/main/java/io/reactivestax/files" + "trades_chunk_" + (i + 1) + ".csv";
             executorService.submit(() -> {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {

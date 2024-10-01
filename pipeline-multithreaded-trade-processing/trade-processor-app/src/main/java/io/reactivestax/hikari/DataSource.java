@@ -2,7 +2,9 @@ package io.reactivestax.hikari;
 
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariConfig;
+import io.reactivestax.infra.Infra;
 
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 
 public class DataSource {
@@ -12,9 +14,14 @@ public class DataSource {
     static {
         // Configure the HikariCP connection pool
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/bootcamp");
-        config.setUsername("root");
-        config.setPassword("password123");
+        try {
+            config.setJdbcUrl(Infra.readFromApplicationProperties("dbUrl"));
+            config.setUsername(Infra.readFromApplicationProperties("dbUserName"));
+            config.setPassword(Infra.readFromApplicationProperties("dbPassword"));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
 
         // Optional HikariCP settings
         config.setMaximumPoolSize(50); // Max 10 connections in the pool
