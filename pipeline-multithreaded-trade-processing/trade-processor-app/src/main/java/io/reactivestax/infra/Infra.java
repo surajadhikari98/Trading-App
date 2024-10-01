@@ -11,12 +11,12 @@ public class Infra {
     private List<LinkedBlockingDeque<String>> queues = new ArrayList<>();
     private static Map<String, LinkedBlockingDeque<String>> queueMap = new HashMap<>();
 
-    public static Integer readFromApplicationProperties(String propertyName) throws FileNotFoundException {
+    public static String readFromApplicationProperties(String propertyName) throws FileNotFoundException {
         Properties properties = new Properties();
         String filePath = "application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             properties.load(fileInputStream);
-           return Integer.parseInt(properties.getProperty(propertyName));
+           return properties.getProperty(propertyName);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -25,8 +25,8 @@ public class Infra {
     //number of queue begin with 0;
     //Make sure to call this method to get the queues before launching the queues in chunkProcessor.
     public static Map<String, LinkedBlockingDeque<String>> addToQueueMap() throws FileNotFoundException {
-        Integer queuesNumber = readFromApplicationProperties("queues.number");
-        for (int i = 0; i <queuesNumber ; i++) {
+        String queuesNumber = readFromApplicationProperties("numberOfQueues");
+        for (int i = 0; i <Integer.parseInt(queuesNumber) ; i++) {
             String name = "queues" + i;
             queueMap.put(name, new LinkedBlockingDeque<>());
         }

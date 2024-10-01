@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TradeCsvChunkGenerator implements ChunkGenerator {
 
     public void generateChunk(String filePath) throws FileNotFoundException {
-        Integer numberOfChunks = Infra.readFromApplicationProperties("chunks.number");
+        Integer numberOfChunks = Infra.readFromApplicationProperties("numberOfChunks");
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;

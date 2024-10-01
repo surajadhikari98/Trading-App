@@ -12,13 +12,17 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        new TradeCsvChunkGenerator().generateChunk("/Users/Suraj.Adhikari/downloads/trades.csv");
+        //start chunkGenerator
+        new TradeCsvChunkGenerator().generateChunk(Infra.readFromApplicationProperties("tradeFilePath"));
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
+
+        //Process chunks
         Map<String, LinkedBlockingDeque<String>> queueMap = Infra.addToQueueMap();
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, queueMap);
         tradeCsvChunkProcessor.processChunks();
 
 
+        //process trades
         ExecutorService executorService = Executors.newFixedThreadPool(3);
         tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue(executorService);
 
