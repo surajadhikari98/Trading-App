@@ -7,6 +7,7 @@ import io.reactivestax.infra.Infra;
 import java.io.*;
 import java.sql.*;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -82,9 +83,11 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     @Override
-    public void writeToTradeQueue(String[] trade) throws InterruptedException {
+    public void writeToTradeQueue(String[] trade) throws InterruptedException, FileNotFoundException {
         // Get the queue number, or assign one in a round-robin manner if not already assigned
-        int queueNumber = queueDistributorMap.computeIfAbsent(trade[2], k -> (currentQueueIndex.incrementAndGet() % 3) + 1); //generate 1,2,3
+        String distributionCriteria = Infra.readFromApplicationProperties("tradeDistributionCriteria");
+        //checking the distributionCriteria from Application.properties
+        int queueNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0], k -> (currentQueueIndex.incrementAndGet() % 3) + 1); //generate 1,2,3
         selectQueue(trade[0], queueNumber);
         System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
     }
