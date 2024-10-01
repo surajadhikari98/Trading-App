@@ -2,6 +2,7 @@ package io.reactivestax.component;
 
 import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.hikari.DataSource;
+import io.reactivestax.infra.Infra;
 
 import java.io.*;
 import java.sql.*;
@@ -38,7 +39,9 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     public void processChunks() {
         try {
             for (int i = 1; i <= numberOfChunks; i++) {
-                String chunkFileName = "trades_chunk_" + i + ".csv";
+//                String chunkFileName = "trades_chunk_" + i + ".csv";
+                //consulting to the queue for reading the chunksFile
+                String chunkFileName = Infra.getChunksFileMappingQueue().take();
                 chunkProcessorThreadPool.submit(() -> {
                     try {
                         insertIntoTradePayload(chunkFileName);
@@ -59,12 +62,12 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    private void insertIntoTradePayload(String fileName) throws SQLException, IOException, InterruptedException {
-        String filePath = "src/main/java/io/reactivestax/files/";
+    private void insertIntoTradePayload(String filePath) throws SQLException, IOException, InterruptedException {
+//        String filePath = "src/main/java/io/reactivestax/files/";
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
         PreparedStatement statement = connection.prepareStatement(insertQuery);
         String line;
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath + fileName))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             reader.readLine();
             while ((line = reader.readLine()) != null) {
                 String[] split = line.split(",");

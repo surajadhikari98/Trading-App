@@ -34,7 +34,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
         //creating the chunks and submitting to the executorService
         AtomicInteger startLine = new AtomicInteger(1);
         for (int i = 0; i < numberOfChunks; i++) {
-            String outputFile = "src/main/java/io/reactivestax/files" + "trades_chunk_" + (i + 1) + ".csv";
+            String outputFile = "src/main/java/io/reactivestax/files/" + "trades_chunk_" + (i + 1) + ".csv";
             executorService.submit(() -> {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
@@ -46,7 +46,10 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                         writer.newLine();
                     }
                     startLine.set(endLine);
+                    //adding to queue for making the chunk generator and chunk processor decoupled
+                    Infra.setChunksFileMappingQueue(outputFile);
                     System.out.println("Created: " + outputFile);
+
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
