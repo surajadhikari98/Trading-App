@@ -13,18 +13,18 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         //start chunkGenerator
-        new TradeCsvChunkGenerator().generateChunk(Infra.readFromApplicationProperties("tradeFilePath"));
+        new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("tradeFilePath"), Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks"));
 
 
         //process chunks
         List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
-        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationProperties("chunkProcessorThreadPoolSize")));
+        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, queues);
         tradeCsvChunkProcessor.processChunks();
 
 
         //process trades
-        ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationProperties("tradeProcessorThreadPoolSize")));
+        ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("tradeProcessorThreadPoolSize")));
         tradeCsvChunkProcessor.startMultiThreadsForTradeProcessor(executorService);
 
     }

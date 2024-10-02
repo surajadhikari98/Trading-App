@@ -15,9 +15,9 @@ public class DataSource {
         // Configure the HikariCP connection pool
         HikariConfig config = new HikariConfig();
         try {
-            config.setJdbcUrl(Infra.readFromApplicationProperties("dbUrl"));
-            config.setUsername(Infra.readFromApplicationProperties("dbUserName"));
-            config.setPassword(Infra.readFromApplicationProperties("dbPassword"));
+            config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("dbUrl"));
+            config.setUsername(Infra.readFromApplicationPropertiesStringFormat("dbUserName"));
+            config.setPassword(Infra.readFromApplicationPropertiesStringFormat("dbPassword"));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

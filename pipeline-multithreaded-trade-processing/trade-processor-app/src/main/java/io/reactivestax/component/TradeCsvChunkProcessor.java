@@ -68,7 +68,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     @Override
     // Get the queue number, or assign one in a round-robin manner if not already assigned
     public void writeToTradeQueue(String[] trade) throws InterruptedException, FileNotFoundException {
-        String distributionCriteria = Infra.readFromApplicationProperties("tradeDistributionCriteria");
+        String distributionCriteria = Infra.readFromApplicationPropertiesStringFormat("tradeDistributionCriteria");
         //checking the distributionCriteria from Application.properties
         int queueNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
                 k -> (currentQueueIndex.incrementAndGet() % 3) + 1); //generate 1,2,3

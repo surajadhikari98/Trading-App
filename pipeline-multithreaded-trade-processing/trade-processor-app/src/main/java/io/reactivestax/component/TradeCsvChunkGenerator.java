@@ -5,15 +5,18 @@ import io.reactivestax.infra.Infra;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TradeCsvChunkGenerator implements ChunkGenerator {
 
-    public void generateChunk(String filePath) throws FileNotFoundException {
-        int numberOfChunks = Integer.parseInt(Infra.readFromApplicationProperties("numberOfChunks"));
+    @Override
+    public Map<String, Boolean> generateAndSubmitChunks(String filePath, Integer numberOfChunks) throws FileNotFoundException {
+        Map<String, Boolean> chunksTrackerMap  =new HashMap<>();
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -48,7 +51,9 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                     startLine.set(endLine);
                     //adding to queue for making the chunk generator and chunk processor decoupled
                     Infra.setChunksFileMappingQueue(outputFile);
+
                     System.out.println("Created: " + outputFile);
+                    chunksTrackerMap.put(outputFile, true);
 
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -56,5 +61,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
             });
         }
         executorService.shutdown();
+        return chunksTrackerMap;
     }
+
 }
