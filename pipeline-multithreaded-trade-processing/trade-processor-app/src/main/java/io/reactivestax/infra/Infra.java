@@ -33,6 +33,14 @@ public class Infra {
         }
     }
 
+    //current version is using queueList
+    public static List<LinkedBlockingDeque<String>> addToQueueList() {
+        for (int i = 0; i < Integer.parseInt(queuesNumber); i++) {
+            queueList.add(new LinkedBlockingDeque<>());
+        }
+        return queueList;
+    }
+
     //number of queue begin with 0;
     //Make sure to call this method to get the queues before launching the queues in chunkProcessor.
     public static Map<String, LinkedBlockingDeque<String>> addToQueueMap() {
@@ -43,12 +51,6 @@ public class Infra {
         return queueMap;
     }
 
-    public static List<LinkedBlockingDeque<String>> addToQueueList() {
-        for (int i = 0; i < Integer.parseInt(queuesNumber); i++) {
-            queueList.add(new LinkedBlockingDeque<>());
-        }
-        return queueList;
-    }
 
     public static LinkedBlockingQueue<String> getChunksFileMappingQueue() {
         return chunksFileMappingQueue;
