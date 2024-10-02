@@ -17,7 +17,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
-//    Map<String, LinkedBlockingDeque<String>> queueTracker;
+    //    Map<String, LinkedBlockingDeque<String>> queueTracker;
     List<LinkedBlockingDeque<String>> queueTracker;
     static LinkedBlockingDeque<String> queue1 = new LinkedBlockingDeque<>();
     static LinkedBlockingDeque<String> queue2 = new LinkedBlockingDeque<>();
@@ -32,7 +32,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 //        }
 //    }
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks,  List<LinkedBlockingDeque<String>> queueTracker) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, List<LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
         this.queueTracker = queueTracker;
@@ -96,16 +96,20 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
     }
 
-//    private static void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
+//    private void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
+//
 //        switch (queueNumber) {
 //            case 1:
-//                queue1.put(tradeId);
+//                queueTracker.get(0).put(tradeId);
+//                System.out.println("queueTracker1.size() = " + queueTracker.get(0).size());
 //                break;
 //            case 2:
-//                queue2.put(tradeId);
+//                queueTracker.get(1).put(tradeId);
+//                System.out.println("queueTracker2.size() = " + queueTracker.get(1).size());
 //                break;
 //            case 3:
-//                queue3.put(tradeId);
+//                queueTracker.get(2).put(tradeId);
+//                System.out.println("queue3.size() = " + queueTracker.get(2).size());
 //                break;
 //            default:
 //                throw new IllegalStateException("Unexpected value: " + queueNumber);
@@ -113,29 +117,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 //    }
 
     private void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
-//        LinkedBlockingDeque<String> selectedQueue;
-//        for(String key: queueTracker.keySet()) {
-//            selectedQueue = key
-//        }
-        switch (queueNumber) {
-            case 1:
-                queueTracker.get(0).put(tradeId);
-                System.out.println("queueTracker1.size() = " + queueTracker.get(0).size());
-//                queue1.put(tradeId);
-                break;
-            case 2:
-//                queue2.put(tradeId);
-                queueTracker.get(1).put(tradeId);
-                System.out.println("queueTracker2.size() = " + queueTracker.get(1).size());
-                break;
-            case 3:
-//                queue3.put(tradeId);
-                queueTracker.get(2).put(tradeId);
-                System.out.println("queue3.size() = " + queueTracker.get(2).size());
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + queueNumber);
-        }
+        queueTracker.get(queueNumber - 1).put(tradeId);
+        System.out.println(queueNumber + "size is: " + queueTracker.get(queueNumber - 1).size());
     }
 
     private static boolean checkValidity(String[] split) {
@@ -144,14 +127,9 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
         for (int i = 0; i < queueTracker.size(); i++) {
-//            executorService.submit(new CsvTradeProcessor(queueTracker.get("queues"+i)));
-//            System.out.println("queues" + i  + queueTracker.get("queues"+ i).size());
             CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(queueTracker.get(i));
             executorService.submit(csvTradeProcessor);
-//            System.out.println("queue " + i  + "size is : " + queueTracker.get(i).size());
         }
-//        executorService.submit(new CsvTradeProcessor(queue2));
-//        executorService.submit(new CsvTradeProcessor(queue3));
         executorService.shutdown();
     }
 }
