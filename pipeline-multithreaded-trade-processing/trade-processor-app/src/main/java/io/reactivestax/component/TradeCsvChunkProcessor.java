@@ -24,15 +24,15 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     static LinkedBlockingDeque<String> queue3 = new LinkedBlockingDeque<>();
     static AtomicInteger currentQueueIndex = new AtomicInteger(0);
 
-    static {
-        try {
-            connection = DataSource.getConnection();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    static {
+//        try {
+//            connection = DataSource.getConnection();
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, List<LinkedBlockingDeque<String>> queueTracker) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks,  List<LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
         this.numberOfChunks = numberOfChunks;
         this.queueTracker = queueTracker;
@@ -49,6 +49,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                         insertIntoTradePayload(chunkFileName);
                     } catch (IOException | SQLException | InterruptedException e) {
                         throw new RuntimeException(e);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
                 });
             }
@@ -64,10 +66,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    private void insertIntoTradePayload(String filePath) throws SQLException, IOException, InterruptedException {
+    private void insertIntoTradePayload(String filePath) throws Exception {
 //        String filePath = "src/main/java/io/reactivestax/files/";
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
-        PreparedStatement statement = connection.prepareStatement(insertQuery);
+        PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery);
         String line;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             reader.readLine();
@@ -94,16 +96,42 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
     }
 
-    private static void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
+//    private static void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
+//        switch (queueNumber) {
+//            case 1:
+//                queue1.put(tradeId);
+//                break;
+//            case 2:
+//                queue2.put(tradeId);
+//                break;
+//            case 3:
+//                queue3.put(tradeId);
+//                break;
+//            default:
+//                throw new IllegalStateException("Unexpected value: " + queueNumber);
+//        }
+//    }
+
+    private void selectQueue(String tradeId, Integer queueNumber) throws InterruptedException {
+//        LinkedBlockingDeque<String> selectedQueue;
+//        for(String key: queueTracker.keySet()) {
+//            selectedQueue = key
+//        }
         switch (queueNumber) {
             case 1:
-                queue1.put(tradeId);
+                queueTracker.get(0).put(tradeId);
+                System.out.println("queueTracker1.size() = " + queueTracker.get(0).size());
+//                queue1.put(tradeId);
                 break;
             case 2:
-                queue2.put(tradeId);
+//                queue2.put(tradeId);
+                queueTracker.get(1).put(tradeId);
+                System.out.println("queueTracker2.size() = " + queueTracker.get(1).size());
                 break;
             case 3:
-                queue3.put(tradeId);
+//                queue3.put(tradeId);
+                queueTracker.get(2).put(tradeId);
+                System.out.println("queue3.size() = " + queueTracker.get(2).size());
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + queueNumber);
@@ -120,7 +148,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 //            System.out.println("queues" + i  + queueTracker.get("queues"+ i).size());
             CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(queueTracker.get(i));
             executorService.submit(csvTradeProcessor);
-            System.out.println("queues" + i  + "size is : " + queueTracker.get(i).size());
+//            System.out.println("queue " + i  + "size is : " + queueTracker.get(i).size());
         }
 //        executorService.submit(new CsvTradeProcessor(queue2));
 //        executorService.submit(new CsvTradeProcessor(queue3));

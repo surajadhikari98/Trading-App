@@ -37,7 +37,7 @@ public class Infra {
     //Make sure to call this method to get the queues before launching the queues in chunkProcessor.
     public static Map<String, LinkedBlockingDeque<String>> addToQueueMap() {
         for (int i = 0; i < Integer.parseInt(queuesNumber); i++) {
-            String name = "queues" + i;
+            String name = "queue" + i;
             queueMap.put(name, new LinkedBlockingDeque<>());
         }
         return queueMap;
