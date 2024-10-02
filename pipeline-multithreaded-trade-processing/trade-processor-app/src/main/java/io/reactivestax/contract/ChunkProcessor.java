@@ -1,9 +1,11 @@
 package io.reactivestax.contract;
 
 
+import io.reactivestax.domain.Trade;
+
 import java.io.FileNotFoundException;
 
 public interface ChunkProcessor {
-    void processChunks() throws Exception;
-    void writeToTradeQueue(String[] trade) throws InterruptedException, FileNotFoundException;
+    void processChunk() throws FileNotFoundException;
+    void insertTradeIntoTradePayloadTable(String filePath) throws Exception;
 }

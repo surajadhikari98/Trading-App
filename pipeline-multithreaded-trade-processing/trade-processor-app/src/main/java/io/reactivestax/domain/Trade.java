@@ -1,6 +1,6 @@
 package io.reactivestax.domain;
 
-public class JournalEntry {
+public class Trade {
     private String tradeIdentifier;
     private String tradeDateTime;
     private String accountNumber;
@@ -10,7 +10,7 @@ public class JournalEntry {
     private Double price;
     private Integer position;
 
-    public JournalEntry(String tradeIdentifier, String tradeDateTime, String accountNumber, String cusip, String direction, Integer quantity, Double price,  Integer position) {
+    public Trade(String tradeIdentifier, String tradeDateTime, String accountNumber, String cusip, String direction, Integer quantity, Double price, Integer position) {
         this.tradeIdentifier = tradeIdentifier;
         this.tradeDateTime = tradeDateTime;
         this.accountNumber = accountNumber;

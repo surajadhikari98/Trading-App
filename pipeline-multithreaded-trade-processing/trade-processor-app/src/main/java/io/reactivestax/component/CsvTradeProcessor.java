@@ -2,7 +2,7 @@ package io.reactivestax.component;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.reactivestax.contract.TradeProcessor;
-import io.reactivestax.domain.JournalEntry;
+import io.reactivestax.domain.Trade;
 import io.reactivestax.exception.OptimisticLockingException;
 import io.reactivestax.hikari.DataSource;
 
@@ -35,7 +35,8 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public void run() {
         try {
-            processTrades();
+            String tradeIdentifier = processTrade();
+            System.out.println("Successful insertion for the trade id : " + tradeIdentifier);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (SQLException e) {
@@ -43,64 +44,73 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         }
     }
 
-    public void processTrades() throws InterruptedException, SQLException {
+    @Override
+    public String processTrade() throws InterruptedException, SQLException {
+        String tradeId = "";
         while (!this.dequeue.isEmpty()) {
-            String tradeId = this.dequeue.take();
+            tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
-            String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
             PreparedStatement stmt = connection.prepareStatement(lookupQuery);
-            PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
-            PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);
             stmt.setString(1, tradeId);
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.next()) {
                 String payload = resultSet.getString(1);
                 String[] payloads = payload.split(",");
-                JournalEntry journalEntry = new JournalEntry(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
+                Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
                 System.out.println("result journal" + payload);
-                lookUpStatement.setString(1, payloads[3]);
-                ResultSet lookUpResult = lookUpStatement.executeQuery();
-                if (!lookUpResult.next()) {
+                if (!lookUpSecurityIdByCUSIP(trade.getCusip())) {
                     System.out.println("No security found....");
                     continue;
                 }
-                insertStatement.setString(1, payloads[0]);
-                insertStatement.setString(2, payloads[1]);
-                insertStatement.setString(3, payloads[2]);
-                insertStatement.setString(4, payloads[3]);
-                insertStatement.setString(5, payloads[4]);
-                insertStatement.setString(6, payloads[5]);
-                insertStatement.setString(7, payloads[6]);
-                int i = insertStatement.executeUpdate();
-                processPosition(journalEntry);
-                System.out.println("insertionResult " + i);
+                saveJournalEntry(trade);
+                processPosition(trade);
             }
-
         }
+        return tradeId;
+    }
+
+    @Override
+    public void saveJournalEntry(Trade trade) throws SQLException {
+        String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+        insertStatement.setString(1, trade.getTradeIdentifier());
+        insertStatement.setString(2, trade.getTradeDateTime());
+        insertStatement.setString(3, trade.getAccountNumber());
+        insertStatement.setString(4, trade.getCusip());
+        insertStatement.setString(5, trade.getDirection());
+        insertStatement.setInt(6, trade.getQuantity());
+        insertStatement.setDouble(7, trade.getPrice());
+        insertStatement.executeUpdate();
+    }
+
+    @Override
+    public boolean lookUpSecurityIdByCUSIP(String cusip) throws SQLException {
+        String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
+        PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);
+        lookUpStatement.setString(1, cusip);
+        return lookUpStatement.executeQuery().next();
     }
 
 
     // Process each position with optimistic locking and retry logic
-    public void processPosition(JournalEntry journalEntry) {
+    public void processPosition(Trade trade) {
         try (Connection connection = dataSource.getConnection()) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-
             try {
-                int version = getCusipVersion(connection, journalEntry);
+                int version = getCusipVersion(connection, trade);
 
                 if (version == -1) {
-                    insertPosition(connection, journalEntry);
+                    insertPosition(connection, trade);
                 } else {
-                    updatePosition(connection, journalEntry, version);
+                    updatePosition(connection, trade, version);
                 }
             } catch (OptimisticLockingException e) {
-                System.err.println(e.getMessage() + journalEntry.getPosition());
+                System.err.println(e.getMessage() + trade.getPosition());
                 //logic for the retry count
-                if (mappingForRetryCount(journalEntry) < 3) {
-                    this.dequeue.addLast(journalEntry.getTradeIdentifier());
-                } else{
-                    dlQueue.put(journalEntry.getTradeIdentifier());
+                if (mappingForRetryCount(trade) < 3) {
+                    this.dequeue.addLast(trade.getTradeIdentifier());
+                } else {
+                    dlQueue.put(trade.getTradeIdentifier());
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -110,13 +120,11 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         }
     }
 
-    public int mappingForRetryCount(JournalEntry journalEntry) {
+    public int mappingForRetryCount(Trade trade) {
         int errorCount;
-
-        errorCount = retryMapper.putIfAbsent(journalEntry.getTradeIdentifier(), 1);
-
-        if (retryMapper.get(journalEntry.getTradeIdentifier()) != null) {
-            errorCount = retryMapper.compute(journalEntry.getTradeIdentifier(), (k, i) -> i + 1);
+        errorCount = retryMapper.putIfAbsent(trade.getTradeIdentifier(), 1);
+        if (retryMapper.get(trade.getTradeIdentifier()) != null) {
+            errorCount = retryMapper.compute(trade.getTradeIdentifier(), (k, i) -> i + 1);
         }
         return errorCount;
     }

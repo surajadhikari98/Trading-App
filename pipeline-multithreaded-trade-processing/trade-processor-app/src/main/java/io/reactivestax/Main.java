@@ -20,7 +20,7 @@ public class Main {
         List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, queues);
-        tradeCsvChunkProcessor.processChunks();
+        tradeCsvChunkProcessor.processChunk();
 
 
         //process trades

@@ -25,7 +25,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         this.queueTracker = queueTracker;
     }
 
-    public void processChunks() {
+    @Override
+    public void processChunk() {
         try {
             for (int i = 1; i <= numberOfChunks; i++) {
 //                String chunkFileName = "trades_chunk_" + i + ".csv";
@@ -33,7 +34,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 String chunkFileName = Infra.getChunksFileMappingQueue().take();
                 chunkProcessorThreadPool.submit(() -> {
                     try {
-                        insertIntoTradePayload(chunkFileName);
+                        insertTradeIntoTradePayloadTable(chunkFileName);
                     } catch (IOException | SQLException | InterruptedException e) {
                         throw new RuntimeException(e);
                     } catch (Exception e) {
@@ -45,9 +46,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
             throw new RuntimeException(e);
         }
     }
-
-    private void insertIntoTradePayload(String filePath) throws Exception {
-//        String filePath = "src/main/java/io/reactivestax/files/";
+@Override
+public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
         PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery);
         String line;
@@ -65,7 +65,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    @Override
     // Get the queue number, or assign one in a round-robin manner if not already assigned
     public void writeToTradeQueue(String[] trade) throws InterruptedException, FileNotFoundException {
         String distributionCriteria = Infra.readFromApplicationPropertiesStringFormat("tradeDistributionCriteria");
@@ -92,4 +91,5 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
         executorService.shutdown();
     }
+
 }
