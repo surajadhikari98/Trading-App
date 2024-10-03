@@ -28,8 +28,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public void run() {
         try {
-            String tradeIdentifier = processTrade();
-            System.out.println("Successful insertion for the trade id : " + tradeIdentifier);
+            processTrade();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (Exception e) {
@@ -38,11 +37,10 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     }
 
     @Override
-    public String processTrade() throws Exception {
+    public void processTrade() throws Exception {
         CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository();
-        String tradeId = "";
         while (!this.dequeue.isEmpty()) {
-            tradeId = this.dequeue.take();
+            String tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             try (Connection connection = DataSource.getConnection();
                  PreparedStatement stmt = connection.prepareStatement(lookupQuery)) {
@@ -62,7 +60,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 }
             }
         }
-        return tradeId;
     }
 
 

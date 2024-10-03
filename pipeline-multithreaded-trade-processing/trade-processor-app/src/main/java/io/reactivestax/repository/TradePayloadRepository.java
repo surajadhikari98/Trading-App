@@ -12,7 +12,7 @@ import static io.reactivestax.utils.Utility.checkValidity;
 public class TradePayloadRepository implements PayloadRepository {
     @Override
     public String[] insertTradeIntoTradePayloadTable(String filePath) throws Exception {
-        String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, lookup_status, posted, position_status, payload) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, lookup_status, posted_status, position_status, payload) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String[] split = new String[0];
 
         try(PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery)) {
@@ -29,6 +29,7 @@ public class TradePayloadRepository implements PayloadRepository {
                     statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
                     statement.setString(6, line);
                     statement.executeUpdate();
+                    System.out.println("successfully inserted into db = " + reader);
 //                    writeToTradeQueue(split);
                 }
             }
