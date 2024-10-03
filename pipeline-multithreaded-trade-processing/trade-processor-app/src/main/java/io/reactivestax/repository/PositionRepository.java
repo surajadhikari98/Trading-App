@@ -12,8 +12,8 @@ public class PositionRepository {
     public static int getCusipVersion(Connection connection, Trade trade) throws SQLException {
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
         PreparedStatement stmt = connection.prepareStatement(query);
-        stmt.setString(1, trade.getAccountNumber());
-        stmt.setString(2, trade.getCusip());
+        stmt.setString(1, trade.accountNumber());
+        stmt.setString(2, trade.cusip());
         ResultSet rs = stmt.executeQuery();
         if (rs.next()) {
             return rs.getInt("version");
@@ -26,11 +26,11 @@ public class PositionRepository {
         connection.setAutoCommit(false);
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
         PreparedStatement stmt = connection.prepareStatement(insertQuery);
-        stmt.setString(1, trade.getAccountNumber());
-        stmt.setString(2, trade.getCusip());
-        stmt.setDouble(3, trade.getQuantity());
+        stmt.setString(1, trade.accountNumber());
+        stmt.setString(2, trade.cusip());
+        stmt.setDouble(3, trade.quantity());
         stmt.executeUpdate();
-        System.out.println("New position for " + trade.getAccountNumber() + "is: " + trade.getPosition());
+        System.out.println("New position for " + trade.accountNumber() + "is: " + trade.position());
         connection.commit();
         connection.setAutoCommit(true);
     }
@@ -42,17 +42,17 @@ public class PositionRepository {
         String updateQuery = "UPDATE positions SET position = ?, version = version + 1 WHERE account_number = ? AND cusip = ? AND version = ?";
         PreparedStatement stmt = connection.prepareStatement(updateQuery);
         PreparedStatement positionStatement = connection.prepareStatement(positionQuery);
-        positionStatement.setString(1, trade.getAccountNumber());
-        positionStatement.setString(2, trade.getCusip());
+        positionStatement.setString(1, trade.accountNumber());
+        positionStatement.setString(2, trade.cusip());
         ResultSet resultSet = positionStatement.executeQuery();
         if (resultSet.next()) {
-            if (trade.getDirection().equalsIgnoreCase("BUY")) {
-                stmt.setDouble(1, resultSet.getInt(1) + trade.getPosition());
+            if (trade.direction().equalsIgnoreCase("BUY")) {
+                stmt.setDouble(1, resultSet.getInt(1) + trade.position());
             } else {
-                stmt.setDouble(1, resultSet.getInt(1) - trade.getPosition());
+                stmt.setDouble(1, resultSet.getInt(1) - trade.position());
             }
-            stmt.setString(2, trade.getAccountNumber());
-            stmt.setString(3, trade.getCusip());
+            stmt.setString(2, trade.accountNumber());
+            stmt.setString(3, trade.cusip());
             stmt.setInt(4, version);
 
             int rowsUpdated = stmt.executeUpdate();
@@ -61,7 +61,7 @@ public class PositionRepository {
                 throw new OptimisticLockingException("Optimistic locking failed, retrying transaction...");
             }
             connection.commit();
-            System.out.println("Position updated for " + trade.getCusip() + trade.getPosition());
+            System.out.println("Position updated for " + trade.cusip() + trade.position());
             connection.setAutoCommit(true);
         }
     }
