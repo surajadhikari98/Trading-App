@@ -3,6 +3,7 @@ package io.reactivestax.component;
 import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
+import io.reactivestax.repository.TradePayloadRepository;
 
 import java.io.*;
 import java.sql.*;
@@ -27,13 +28,15 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     @Override
     public void processChunk() {
         try {
+            TradePayloadRepository tradePayloadRepository = new TradePayloadRepository();
             for (int i = 1; i <= numberOfChunks; i++) {
 //                String chunkFileName = "trades_chunk_" + i + ".csv";
                 //consulting to the queue for reading the chunksFile
                 String chunkFileName = Infra.getChunksFileMappingQueue().take();
                 chunkProcessorThreadPool.submit(() -> {
                     try {
-                        insertTradeIntoTradePayloadTable(chunkFileName);
+                        String[] payload = tradePayloadRepository.insertTradeIntoTradePayloadTable(chunkFileName);
+                        writeToTradeQueue(payload);
                     } catch (IOException | SQLException | InterruptedException e) {
                         throw new RuntimeException(e);
                     } catch (Exception e) {
@@ -45,24 +48,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
             throw new RuntimeException(e);
         }
     }
-@Override
-public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
-        String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
-        PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery);
-        String line;
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            reader.readLine();
-            while ((line = reader.readLine()) != null) {
-                String[] split = line.split(",");
-                statement.setString(1, split[0]);
-                statement.setString(2, checkValidity(split) ? "valid" : "inValid");
-                statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
-                statement.setString(4, line);
-                statement.executeUpdate();
-                writeToTradeQueue(split);
-            }
-        }
-    }
+
 
     // Get the queue number, or assign one in a round-robin manner if not already assigned
     public void writeToTradeQueue(String[] trade) throws InterruptedException, FileNotFoundException {
@@ -79,9 +65,7 @@ public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         System.out.println(queueNumber + "size is: " + queueTracker.get(queueNumber - 1).size());
     }
 
-    private static boolean checkValidity(String[] split) {
-        return (split[0]) != null;
-    }
+
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
         for (LinkedBlockingDeque<String> strings : queueTracker) {

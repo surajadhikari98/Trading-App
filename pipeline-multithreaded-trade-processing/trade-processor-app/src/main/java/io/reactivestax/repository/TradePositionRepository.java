@@ -1,5 +1,6 @@
 package io.reactivestax.repository;
 
+import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.exception.OptimisticLockingException;
 
@@ -8,8 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PositionRepository {
-    public static int getCusipVersion(Connection connection, Trade trade) throws SQLException {
+public class TradePositionRepository implements PositionRepository {
+    @Override
+    public int getCusipVersion(Connection connection, Trade trade) throws SQLException {
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
         PreparedStatement stmt = connection.prepareStatement(query);
         stmt.setString(1, trade.accountNumber());
@@ -22,7 +24,8 @@ public class PositionRepository {
         }
     }
 
-    public static void insertPosition(Connection connection, Trade trade) throws SQLException {
+    @Override
+    public void insertPosition(Connection connection, Trade trade) throws SQLException {
         connection.setAutoCommit(false);
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
         PreparedStatement stmt = connection.prepareStatement(insertQuery);
@@ -36,7 +39,8 @@ public class PositionRepository {
     }
 
     // Update the account balance using optimistic locking
-    public static void updatePosition(Connection connection, Trade trade, int version) throws SQLException {
+    @Override
+    public void updatePosition(Connection connection, Trade trade, int version) throws SQLException {
         connection.setAutoCommit(false);
         String positionQuery = "SELECT position FROM positions where account_number = ? AND cusip = ?";
         String updateQuery = "UPDATE positions SET position = ?, version = version + 1 WHERE account_number = ? AND cusip = ? AND version = ?";
