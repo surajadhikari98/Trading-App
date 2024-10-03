@@ -36,8 +36,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                     try {
                         insertTradeIntoTradePayloadTable(chunkFileName);
                     } catch (IOException | SQLException | InterruptedException e) {
-                        throw new RuntimeException(e);
+                        System.out.println("error while insert into trade payloads = " + e.getMessage());
+//                        throw new RuntimeException(e);
                     } catch (Exception e) {
+                        System.out.println("error while insert into trade payloads = " + e.getMessage());
                         throw new RuntimeException(e);
                     }
                 });
@@ -48,19 +50,23 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 @Override
 public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
-        String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, payload) VALUES (?, ?, ?,?)";
-        PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery);
-        String line;
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            reader.readLine();
-            while ((line = reader.readLine()) != null) {
-                String[] split = line.split(",");
-                statement.setString(1, split[0]);
-                statement.setString(2, checkValidity(split) ? "valid" : "inValid");
-                statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
-                statement.setString(4, line);
-                statement.executeUpdate();
-                writeToTradeQueue(split);
+    String insertQuery = "INSERT INTO trade_payloads (trade_id, validity_status, status_reason, lookup_status, je_status, payload) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try(PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery)) {
+            String line;
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                reader.readLine();
+                while ((line = reader.readLine()) != null) {
+                    String[] split = line.split(",");
+                    statement.setString(1, split[0]);
+                    statement.setString(2, checkValidity(split) ? "valid" : "inValid");
+                    statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
+                    statement.setString(4, "");
+                    statement.setString(5, "not_posted");
+                    statement.setString(6, line);
+                    statement.executeUpdate();
+                    writeToTradeQueue(split);
+                }
             }
         }
     }
@@ -77,7 +83,7 @@ public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
 
     private void selectAndPutInQueue(String tradeId, Integer queueNumber) throws InterruptedException {
         queueTracker.get(queueNumber - 1).put(tradeId);
-        System.out.println(queueNumber + "size is: " + queueTracker.get(queueNumber - 1).size());
+        System.out.println(queueNumber + " size is: " + queueTracker.get(queueNumber - 1).size());
     }
 
     private static boolean checkValidity(String[] split) {
