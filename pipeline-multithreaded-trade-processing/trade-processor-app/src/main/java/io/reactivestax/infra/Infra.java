@@ -15,33 +15,35 @@ public class Infra {
      private static final Integer queuesNumber;
 
     static {
-        try {
-            queuesNumber = readFromApplicationPropertiesIntegerFormat("numberOfQueues");
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        queuesNumber = readFromApplicationPropertiesIntegerFormat("numberOfQueues");
     }
 
     public static String readFromApplicationPropertiesStringFormat(String propertyName) throws FileNotFoundException {
         Properties properties = new Properties();
-        String filePath = "application.properties";
+        String propName = "";
+        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             properties.load(fileInputStream);
-            return properties.getProperty(propertyName);
+            return propName = properties.getProperty(propertyName);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("application-reading" + e.getMessage());
+//            throw new RuntimeException(e);
         }
+        return propName;
     }
 
-    public static int readFromApplicationPropertiesIntegerFormat(String propertyName) throws FileNotFoundException {
+    public static int readFromApplicationPropertiesIntegerFormat(String propertyName)  {
         Properties properties = new Properties();
-        String filePath = "application.properties";
+        int propName = 0;
+        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             properties.load(fileInputStream);
-            return Integer.parseInt(properties.getProperty(propertyName));
+            return propName = Integer.parseInt(properties.getProperty(propertyName));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("application-reading" + e.getMessage());
+//            throw new RuntimeException(e);
         }
+        return propName;
     }
 
     //current version is using queueList

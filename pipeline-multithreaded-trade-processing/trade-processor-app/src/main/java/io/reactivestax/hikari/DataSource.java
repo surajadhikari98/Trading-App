@@ -11,6 +11,22 @@ public class DataSource {
 
     private static HikariDataSource dataSource;
 
+    private DataSource() throws FileNotFoundException {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("dbUrl"));
+        config.setUsername(Infra.readFromApplicationPropertiesStringFormat("dbUserName"));
+        config.setPassword(Infra.readFromApplicationPropertiesStringFormat("dbPassword"));
+
+        // Optional HikariCP settings
+        config.setMaximumPoolSize(50); // Max 10 connections in the pool
+        config.setMinimumIdle(5); // Minimum idle connections
+        config.setConnectionTimeout(30000); // 30 seconds timeout for obtaining a connection
+        config.setIdleTimeout(600000); // 10 minutes idle timeout
+
+        // Create the HikariCP data source
+        dataSource = new HikariDataSource(config);
+    }
+
     static {
         // Configure the HikariCP connection pool
         HikariConfig config = new HikariConfig();

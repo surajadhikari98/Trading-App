@@ -61,7 +61,7 @@ public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
                     statement.setString(1, split[0]);
                     statement.setString(2, checkValidity(split) ? "valid" : "inValid");
                     statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
-                    statement.setString(4, "");
+                    statement.setString(4, "fail");
                     statement.setString(5, "not_posted");
                     statement.setString(6, line);
                     statement.executeUpdate();
@@ -87,7 +87,7 @@ public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
     }
 
     private static boolean checkValidity(String[] split) {
-        return (split[0]) != null;
+        return (split[0] != null && split[1] != null && split[2] != null && split[3] != null && split[4] != null && split[5] != null);
     }
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
