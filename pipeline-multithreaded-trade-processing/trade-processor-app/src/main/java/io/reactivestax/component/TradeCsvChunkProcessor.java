@@ -38,6 +38,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                         String[] payload = tradePayloadRepository.insertTradeIntoTradePayloadTable(chunkFileName);
                         writeToTradeQueue(payload);
                     } catch (IOException | SQLException | InterruptedException e) {
+                        System.out.println(e.getMessage());
                         throw new RuntimeException(e);
                     } catch (Exception e) {
                         throw new RuntimeException(e);

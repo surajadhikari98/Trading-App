@@ -11,19 +11,17 @@ import static io.reactivestax.utils.Utility.checkValidity;
 
 public class TradePayloadRepository implements PayloadRepository {
     @Override
-    public String[] insertTradeIntoTradePayloadTable(String filePath) throws Exception {
-        String insertQuery = "INSERT INTO trade_payloads (trade_id, status, status_reason, lookup_status, posted_status, position_status, payload) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        String[] split = new String[0];
+    public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
+        String insertQuery = "INSERT INTO trade_payloads (trade_id, validity_status, status_reason, lookup_status, je_status, payload) VALUES (?, ?, ?, ?, ?, ?)";
 
         try(PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery)) {
             String line;
             statement.setString(4, "");
-            statement.setString(5, "");
-            statement.setString(5, "");
+            statement.setString(5, "not_posted");
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
-                    split = line.split(",");
+                   String[] split = line.split(",");
                     statement.setString(1, split[0]);
                     statement.setString(2, checkValidity(split) ? "valid" : "inValid");
                     statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
@@ -34,6 +32,5 @@ public class TradePayloadRepository implements PayloadRepository {
                 }
             }
         }
-        return split;
     }
 }
