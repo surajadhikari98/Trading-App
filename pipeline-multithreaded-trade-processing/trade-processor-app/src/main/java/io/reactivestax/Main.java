@@ -15,7 +15,6 @@ public class Main {
         //start chunkGenerator
         new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("tradeFilePath"), Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks"));
 
-
         //process chunks
         List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));

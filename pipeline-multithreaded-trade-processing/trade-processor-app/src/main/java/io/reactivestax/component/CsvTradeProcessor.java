@@ -27,20 +27,21 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public void run() {
         try {
-            String tradeIdentifier = processTrade();
-            System.out.println("Successful insertion for the trade id : " + tradeIdentifier);
+         processTrade();
+//            System.out.println("Successful insertion for the trade id : " + tradeIdentifier);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            System.err.println("processing err : " + e.getMessage());
+//            throw new RuntimeException(e);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.err.println("processing err : " + e.getMessage());
+//            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String processTrade() throws Exception {
-        String tradeId = "";
+    public void processTrade() throws Exception {
         while (!this.dequeue.isEmpty()) {
-            tradeId = this.dequeue.take();
+            String tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             try (Connection connection = DataSource.getConnection();
                  PreparedStatement stmt = connection.prepareStatement(lookupQuery)) {
@@ -60,7 +61,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 }
             }
         }
-        return tradeId;
     }
 
     @Override
@@ -76,6 +76,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
            insertStatement.setInt(6, trade.quantity());
            insertStatement.setDouble(7, trade.price());
            insertStatement.executeUpdate();
+           System.out.println("saved into journal for: " + trade.tradeIdentifier());
        }
     }
 
