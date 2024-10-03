@@ -63,11 +63,11 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                         continue;
                     }
                     //issue is here check for it......
-//                    TradePayloadRepository.updateLookUpStatus(DataSource.getConnection(), tradeId);
+                    TradePayloadRepository.updateLookUpStatus(connection, tradeId);
                     boolean isPositionUpdated = processPosition(trade);
                     if (isPositionUpdated) {
                         saveJournalEntry(trade);
-//                    TradePayloadRepository.updateJournalStatus(DataSource.getConnection(), tradeId);
+                    TradePayloadRepository.updateJournalStatus(connection, tradeId);
                     }
                 }
             }
