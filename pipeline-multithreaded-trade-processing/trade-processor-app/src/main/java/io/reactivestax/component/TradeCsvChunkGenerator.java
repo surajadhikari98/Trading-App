@@ -21,6 +21,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                 lines.add(line);
             }
         } catch (IOException e) {
+            System.out.println("chunks" + e.getMessage());
             throw new RuntimeException(e);
         }
 
@@ -58,5 +59,4 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
         }
         executorService.shutdown();
     }
-
 }

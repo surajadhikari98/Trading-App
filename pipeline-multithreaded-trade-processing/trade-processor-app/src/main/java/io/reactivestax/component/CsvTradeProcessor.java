@@ -25,7 +25,8 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         try {
             connection = DataSource.getConnection();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println("error in connection" + e.getMessage());
+//            throw new RuntimeException(e);
         }
     }
 
@@ -62,7 +63,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                         System.out.println("No security found....");
                         continue;
                     }
-                    //issue is here check for it......
                     TradePayloadRepository.updateLookUpStatus(connection, tradeId);
                     boolean isPositionUpdated = processPosition(trade);
                     if (isPositionUpdated) {

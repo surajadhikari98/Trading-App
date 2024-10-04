@@ -14,12 +14,14 @@ public class Main {
     public static void main(String[] args) throws Exception {
         //start chunkGenerator
         new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("tradeFilePath"), Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks"));
-
+//        Thread.sleep(100);
 
         //process chunks
         List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
+        int numberOfChunks = Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks");
+
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10, queues);
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, numberOfChunks, queues);
         tradeCsvChunkProcessor.processChunk();
 
 

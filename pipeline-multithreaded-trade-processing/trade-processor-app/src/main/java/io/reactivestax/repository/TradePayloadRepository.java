@@ -1,6 +1,5 @@
 package io.reactivestax.repository;
 
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -24,7 +23,6 @@ public class TradePayloadRepository {
             stmt.setString(2, tradeId);
             stmt.executeUpdate();
             System.out.println("Journal Status updated suceesfully for: " + tradeId);
-
         }
     }
 }
