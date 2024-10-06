@@ -6,6 +6,7 @@ import io.reactivestax.domain.Trade;
 import io.reactivestax.exception.OptimisticLockingException;
 import io.reactivestax.hikari.DataSource;
 import io.reactivestax.repository.TradePayloadRepository;
+import io.reactivestax.repository.TradeProcessorRepository;
 
 import java.sql.*;
 import java.util.Map;
@@ -48,6 +49,8 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public String processTrade() throws Exception {
         String tradeId = "";
+        TradeProcessorRepository tradeProcessorRepository = new TradeProcessorRepository(DataSource.getConnection());
+        TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(DataSource.getConnection());
         while (!this.dequeue.isEmpty()) {
             tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
@@ -59,44 +62,20 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     String[] payloads = payload.split(",");
                     Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
                     System.out.println("result journal" + payload);
-                    if (!lookUpSecurityIdByCUSIP(trade.getCusip())) {
+                    if (!tradeProcessorRepository.lookUpSecurityIdByCUSIP(trade.getCusip())) {
                         System.out.println("No security found....");
                         continue;
                     }
-                    TradePayloadRepository.updateLookUpStatus(connection, tradeId);
+                    tradePayloadRepository.updateLookUpStatus(tradeId);
                     boolean isPositionUpdated = processPosition(trade);
                     if (isPositionUpdated) {
-                        saveJournalEntry(trade);
-                    TradePayloadRepository.updateJournalStatus(connection, tradeId);
+                        tradeProcessorRepository.saveJournalEntry(trade);
+                        tradePayloadRepository.updateJournalStatus(tradeId);
                     }
                 }
             }
         }
         return tradeId;
-    }
-
-    @Override
-    public void saveJournalEntry(Trade trade) throws SQLException {
-        String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
-            insertStatement.setString(1, trade.getTradeIdentifier());
-            insertStatement.setString(2, trade.getTradeDateTime());
-            insertStatement.setString(3, trade.getAccountNumber());
-            insertStatement.setString(4, trade.getCusip());
-            insertStatement.setString(5, trade.getDirection());
-            insertStatement.setInt(6, trade.getQuantity());
-            insertStatement.setDouble(7, trade.getPrice());
-            insertStatement.executeUpdate();
-        }
-    }
-
-    @Override
-    public boolean lookUpSecurityIdByCUSIP(String cusip) throws SQLException {
-        String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
-       try(PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);) {
-           lookUpStatement.setString(1, cusip);
-           return lookUpStatement.executeQuery().next();
-       }
     }
 
 
@@ -110,7 +89,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 if (version == -1) {
                     isPositionUpdated = insertPosition(connection, trade);
                 } else {
-                   isPositionUpdated = updatePosition(connection, trade, version);
+                    isPositionUpdated = updatePosition(connection, trade, version);
                 }
             } catch (OptimisticLockingException e) {
                 System.err.println(e.getMessage() + trade.getPosition());
@@ -137,5 +116,4 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         }
         return errorCount;
     }
-
 }

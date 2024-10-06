@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public interface TradeProcessor {
 //    void processTrades() throws InterruptedException, SQLException;
     String processTrade() throws Exception;
-    void saveJournalEntry(Trade trade) throws SQLException;
-    boolean lookUpSecurityIdByCUSIP(String cusip) throws SQLException;
+//    void saveJournalEntry(Trade trade) throws Exception;
+//    boolean lookUpSecurityIdByCUSIP(String cusip) throws Exception;
     boolean processPosition(Trade trade);
 }

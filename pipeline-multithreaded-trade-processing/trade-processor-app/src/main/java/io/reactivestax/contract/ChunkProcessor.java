@@ -7,5 +7,5 @@ import java.io.FileNotFoundException;
 
 public interface ChunkProcessor {
     void processChunk() throws FileNotFoundException;
-    void insertTradeIntoTradePayloadTable(String filePath) throws Exception;
+//    void insertTradeIntoTradePayloadTable(String filePath) throws Exception;
 }
