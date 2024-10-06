@@ -18,7 +18,6 @@ import static io.reactivestax.utils.Utility.checkValidity;
 
 public class TradeCsvChunkProcessor implements ChunkProcessor {
 
-//    static Connection connection;
     int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
@@ -35,7 +34,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         int chunkProcessorThreadPoolSize = Infra.readFromApplicationPropertiesIntegerFormat("chunkProcessorThreadPoolSize");
         try {
             for (int i = 0; i < chunkProcessorThreadPoolSize; i++) {
-//                String chunkFileName = "trades_chunk_" + i + ".csv";
                 //consulting to the queue for reading the chunksFile
                 String chunkFileName = Infra.getChunksFileMappingQueue().take();
                 chunkProcessorThreadPool.submit(() -> {
@@ -52,30 +50,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-//    @Override
-//    public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
-//        String insertQuery = "INSERT INTO trade_payloads (trade_id, validity_status, status_reason, lookup_status, je_status, payload) VALUES (?, ?, ?, ?, ?, ?)";
-//
-//        try (PreparedStatement statement = DataSource.getConnection().prepareStatement(insertQuery)) {
-//            String line;
-//            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-//                reader.readLine();
-//                while ((line = reader.readLine()) != null) {
-//                    String[] split = line.split(",");
-//                    statement.setString(1, split[0]);
-//                    statement.setString(2, checkValidity(split) ? "valid" : "inValid");
-//                    statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
-//                    statement.setString(4, "fail");
-//                    statement.setString(5, "not_posted");
-//                    statement.setString(6, line);
-//                    statement.executeUpdate();
-//                    figureTheNextQueue(split);
-//                }
-//            }
-//        }
-//    }
-
-//    @Override
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
         TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(DataSource.getConnection());
@@ -89,7 +63,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-    // Get the queue number, or assign one in a round-robin manner if not already assigned
+    // Get the queue number, or assign one in a round-robin or random manner based on application-properties
     public void figureTheNextQueue(String[] trade) throws InterruptedException, FileNotFoundException {
         String distributionCriteria = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
         String useMap = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.useMap");
@@ -128,7 +102,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         queueTracker.get(queueNumber - 1).put(tradeId);
         System.out.println(queueNumber + " size is: " + queueTracker.get(queueNumber - 1).size());
     }
-
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
         for (LinkedBlockingDeque<String> queues : queueTracker) {

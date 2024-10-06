@@ -1,5 +1,6 @@
 package io.reactivestax.repository;
 
+import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.exception.OptimisticLockingException;
 
@@ -8,8 +9,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PositionRepository {
-    public static int getCusipVersion(Connection connection, Trade trade) throws SQLException {
+public class TradePositionRepository implements PositionRepository {
+
+    private final Connection connection;
+    public TradePositionRepository(Connection connection){
+        this.connection = connection;
+    }
+
+
+    @Override
+    public int getCusipVersion(Trade trade) throws SQLException {
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
         try(PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, trade.getAccountNumber());
@@ -23,7 +32,8 @@ public class PositionRepository {
         }
     }
 
-    public static boolean insertPosition(Connection connection, Trade trade) throws SQLException {
+    @Override
+    public boolean insertPosition(Trade trade) throws SQLException {
         connection.setAutoCommit(false);
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
         try(PreparedStatement stmt = connection.prepareStatement(insertQuery);) {
@@ -38,8 +48,9 @@ public class PositionRepository {
         }
     }
 
-    // Update the account balance using optimistic locking
-    public static boolean updatePosition(Connection connection, Trade trade, int version) throws SQLException {
+    // Update the position using optimistic locking
+    @Override
+    public boolean updatePosition(Trade trade, int version) throws SQLException {
         int rowsUpdated = 0;
         connection.setAutoCommit(false);
         String positionQuery = "SELECT position FROM positions where account_number = ? AND cusip = ?";
