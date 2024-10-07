@@ -6,6 +6,8 @@ import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.repository.TradePayloadRepository;
 import io.reactivestax.utils.Utility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.sql.*;
@@ -22,6 +24,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
     List<LinkedBlockingDeque<String>> queueTracker;
+    private static final Logger logger = LoggerFactory.getLogger(TradeCsvChunkProcessor.class);
+
 
     public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, List<LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
@@ -30,23 +34,18 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     @Override
-    public void processChunk() {
+    public void processChunk() throws Exception {
         int chunkProcessorThreadPoolSize = Infra.readFromApplicationPropertiesIntegerFormat("chunkProcessorThreadPoolSize");
-        try {
-            for (int i = 0; i < chunkProcessorThreadPoolSize; i++) {
-                //consulting to the queue for reading the chunksFile
-                String chunkFileName = Infra.getChunksFileMappingQueue().take();
-                chunkProcessorThreadPool.submit(() -> {
-                    try {
-                        insertTradeIntoTradePayloadTable(chunkFileName);
-                    } catch (Exception e) {
-                        System.out.println("error while insert into trade payloads = " + e.getMessage());
-//                        throw new RuntimeException(e);
-                    }
-                });
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        for (int i = 0; i < chunkProcessorThreadPoolSize; i++) {
+            //consulting to the queue for reading the chunksFile
+            String chunkFileName = Infra.getChunksFileMappingQueue().take();
+            chunkProcessorThreadPool.submit(() -> {
+                try {
+                    insertTradeIntoTradePayloadTable(chunkFileName);
+                } catch (Exception e) {
+                    logger.error("error while insert into trade payloads = {}", e.getMessage());
+                }
+            });
         }
     }
 
@@ -80,7 +79,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                         k -> Utility.random()); //generate 1,2,3
             }
             selectAndPutInQueue(trade[0], queueNumber);
-            System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
+            logger.info("Assigned trade ID: {} to queue: {}", trade[0], queueNumber);
         }
 
         if (!Boolean.parseBoolean(useMap)) {
@@ -93,14 +92,14 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 queueNumber = Utility.random();
             }
             selectAndPutInQueue(trade[0], queueNumber);
-            System.out.println("Assigned trade ID: " + trade[0] + " to queue: " + queueNumber);
+            logger.info("Assigned trade ID: {} to queue : {} " , trade[0] , queueNumber);
         }
 
     }
 
     private void selectAndPutInQueue(String tradeId, Integer queueNumber) throws InterruptedException {
         queueTracker.get(queueNumber - 1).put(tradeId);
-        System.out.println(queueNumber + " size is: " + queueTracker.get(queueNumber - 1).size());
+        logger.info("{} size is: {}", queueNumber,  queueTracker.get(queueNumber - 1).size());
     }
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {

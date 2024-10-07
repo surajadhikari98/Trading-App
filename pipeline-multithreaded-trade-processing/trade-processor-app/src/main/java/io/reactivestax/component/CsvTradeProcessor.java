@@ -7,6 +7,8 @@ import io.reactivestax.hikari.DataSource;
 import io.reactivestax.repository.TradePositionRepository;
 import io.reactivestax.repository.TradePayloadRepository;
 import io.reactivestax.repository.CsvTradeProcessorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Map;
@@ -15,11 +17,12 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
-    public LinkedBlockingDeque<String> dequeue;
-    public LinkedBlockingDeque<String> dlQueue;
+    private final LinkedBlockingDeque<String> dequeue;
+    private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     Map<String, Integer> retryMapper = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(CsvTradeProcessor.class);
 
-    public CsvTradeProcessor(LinkedBlockingDeque<String> dequeue) throws Exception {
+    public CsvTradeProcessor(LinkedBlockingDeque<String> dequeue){
         this.dequeue = dequeue;
     }
 
@@ -27,10 +30,9 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     public void run() {
         try {
             String tradeIdentifier = processTrade();
-            System.out.println("Successful insertion for the trade id : " + tradeIdentifier);
+            logger.info("Successful insertion for the trade id : {}", tradeIdentifier);
         } catch (Exception e) {
-            System.err.println("trade processor " + e.getMessage());
-//            throw new RuntimeException(e);
+            logger.error("trade processor {}", e.getMessage());
         }
     }
 
@@ -52,9 +54,9 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     String payload = resultSet.getString(1);
                     String[] payloads = payload.split(",");
                     Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-                    System.out.println("result journal" + payload);
+                    logger.debug("result journal : {}", payload);
                     if (!csvTradeProcessorRepository.lookUpSecurityIdByCUSIP(trade.getCusip())) {
-                        System.out.println("No security found....");
+                        logger.info("No security found....");
                         continue;
                     }
                     tradePayloadRepository.updateLookUpStatus(tradeId);
@@ -81,7 +83,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     isPositionUpdated = tradePositionRepository.updatePosition(trade, version);
                 }
             } catch (OptimisticLockingException e) {
-                System.err.println(e.getMessage() + trade.getPosition());
+                logger.error("Optimistic locking occurred: {} with position: {}", e.getMessage(), trade.getPosition());
                 //logic for the retry count
                 if (mappingForRetryCount(trade) < 3) {
                     this.dequeue.addLast(trade.getTradeIdentifier());
