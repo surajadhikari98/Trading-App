@@ -65,7 +65,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     }
                 }
             }
-        }
+    }
 
 
     // Process each position with optimistic locking and retry logic
