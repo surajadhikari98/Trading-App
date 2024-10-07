@@ -29,15 +29,14 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public void run() {
         try {
-            String tradeIdentifier = processTrade();
-            logger.info("Successful insertion for the trade id : {}", tradeIdentifier);
+            processTrade();
         } catch (Exception e) {
             logger.error("trade processor {}", e.getMessage());
         }
     }
 
     @Override
-    public String processTrade() throws Exception {
+    public void processTrade() throws Exception {
         String tradeId = "";
         CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
         TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(DataSource.getConnection());
@@ -57,19 +56,16 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     logger.debug("result journal : {}", payload);
                     if (!csvTradeProcessorRepository.lookUpSecurityIdByCUSIP(trade.getCusip())) {
                         logger.info("No security found....");
+                        dlQueue.put(trade.getTradeIdentifier());
                         continue;
                     }
-                    tradePayloadRepository.updateLookUpStatus(tradeId);
-                    boolean isPositionUpdated = processPosition(tradePositionRepository,trade);
-                    if (isPositionUpdated) {
-                        csvTradeProcessorRepository.saveJournalEntry(trade);
-                        tradePayloadRepository.updateJournalStatus(tradeId);
+//                    tradePayloadRepository.updateLookUpStatus(tradeId);
+//                        csvTradeProcessorRepository.saveJournalEntry(trade);
+//                        tradePayloadRepository.updateJournalStatus(tradeId);
                     }
                 }
             }
         }
-        return tradeId;
-    }
 
 
     // Process each position with optimistic locking and retry logic

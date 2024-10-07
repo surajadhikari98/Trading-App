@@ -1,7 +1,6 @@
 package io.reactivestax.component;
 
 import io.reactivestax.contract.ChunkProcessor;
-import io.reactivestax.hikari.DBUtils;
 import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.repository.TradePayloadRepository;
@@ -10,14 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.sql.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static io.reactivestax.utils.Utility.checkValidity;
-
 public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     int numberOfChunks;

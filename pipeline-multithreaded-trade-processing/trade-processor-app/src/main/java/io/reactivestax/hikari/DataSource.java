@@ -2,7 +2,6 @@ package io.reactivestax.hikari;
 
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariConfig;
-import io.reactivestax.component.TradeCsvChunkGenerator;
 import io.reactivestax.infra.Infra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,5 +79,4 @@ public class DataSource {
             dataSource.close();
         }
     }
-
 }

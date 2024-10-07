@@ -55,8 +55,8 @@ public class TradePositionRepository implements PositionRepository {
         connection.setAutoCommit(false);
         String positionQuery = "SELECT position FROM positions where account_number = ? AND cusip = ?";
         String updateQuery = "UPDATE positions SET position = ?, version = version + 1 WHERE account_number = ? AND cusip = ? AND version = ?";
-        try( PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
-            PreparedStatement positionStatement = connection.prepareStatement(positionQuery);
+        try( PreparedStatement stmt = connection.prepareStatement(updateQuery);
+             PreparedStatement positionStatement = connection.prepareStatement(positionQuery);) {
             positionStatement.setString(1, trade.getAccountNumber());
             positionStatement.setString(2, trade.getCusip());
             ResultSet resultSet = positionStatement.executeQuery();

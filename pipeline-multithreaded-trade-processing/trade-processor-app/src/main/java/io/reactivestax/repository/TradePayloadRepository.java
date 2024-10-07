@@ -5,6 +5,7 @@ import io.reactivestax.contract.repository.PayloadRepository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import static io.reactivestax.utils.Utility.checkValidity;
 
@@ -52,4 +53,5 @@ public class TradePayloadRepository implements PayloadRepository {
             statement.executeUpdate();
         }
     }
+
 }
