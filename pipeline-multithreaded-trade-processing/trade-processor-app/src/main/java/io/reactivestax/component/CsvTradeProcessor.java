@@ -14,6 +14,7 @@ import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
@@ -21,6 +22,8 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     Map<String, Integer> retryMapper = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(CsvTradeProcessor.class);
+    static AtomicInteger countSec = new AtomicInteger(0);
+
 
     public CsvTradeProcessor(LinkedBlockingDeque<String> dequeue){
         this.dequeue = dequeue;
@@ -37,14 +40,13 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-        String tradeId = "";
         CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
         TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(DataSource.getConnection());
         TradePositionRepository tradePositionRepository = new TradePositionRepository(DataSource.getConnection());
         Connection connection = DataSource.getConnection();
 
         while (!this.dequeue.isEmpty()) {
-            tradeId = this.dequeue.take();
+           String tradeId = this.dequeue.take();
             String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
             try (PreparedStatement stmt = connection.prepareStatement(lookupQuery)) {
                 stmt.setString(1, tradeId);
@@ -53,11 +55,26 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     String payload = resultSet.getString(1);
                     String[] payloads = payload.split(",");
                     Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-                    logger.debug("result journal : {}", payload);
-                    if (!csvTradeProcessorRepository.lookUpSecurityIdByCUSIP(trade.getCusip())) {
+                    logger.info("result journal : {}", payload);
+//                    System.out.println("result journal" +  payload);
+                    if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
                         logger.info("No security found....");
+//                        System.out.println("no sec found" + trade.getCusip() + dlQueue.size());
                         dlQueue.put(trade.getTradeIdentifier());
+                        System.out.println("timess" + trade.getCusip() + countSec.incrementAndGet());
                         continue;
+                    }
+                    String tradeIdentifier = csvTradeProcessorRepository.callStoredProcedureForJournalAndPositionUpdate(trade);
+                    if(tradeIdentifier == null) {
+                        logger.error("Optimistic locking occurred with trade: {}", trade.getPosition());
+                        //logic for the retry count
+                        if (mappingForRetryCount(trade) < 3) {
+                            this.dequeue.addLast(trade.getTradeIdentifier());
+                        } else {
+                            dlQueue.put(trade.getTradeIdentifier());
+                        }
+                    } else{
+                        logger.info("Successful insertion for the trade with trade id: {}", tradeIdentifier);
                     }
 //                    tradePayloadRepository.updateLookUpStatus(tradeId);
 //                        csvTradeProcessorRepository.saveJournalEntry(trade);
