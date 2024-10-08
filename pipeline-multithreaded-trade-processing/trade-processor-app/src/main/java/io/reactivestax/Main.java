@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.logging.Logger;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         //start chunkGenerator
         new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("tradeFilePath"), Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks"));
-//        Thread.sleep(100);
 
         //process chunks
         List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
