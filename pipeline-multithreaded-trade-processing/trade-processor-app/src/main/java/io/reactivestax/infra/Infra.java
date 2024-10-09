@@ -21,7 +21,7 @@ public class Infra {
     public static String readFromApplicationPropertiesStringFormat(String propertyName) throws FileNotFoundException {
         Properties properties = new Properties();
         String propName = "";
-        String filePath = "application.properties";
+        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/resources/application.properties";
 //        String filePath = "src/test/resources/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             properties.load(fileInputStream);
@@ -35,7 +35,7 @@ public class Infra {
     public static int readFromApplicationPropertiesIntegerFormat(String propertyName)  {
         Properties properties = new Properties();
         int propName = 0;
-        String filePath = "application.properties";
+        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/resources/application.properties";
         //for Test environment
 //        String filePath = "src/test/resources/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
