@@ -52,7 +52,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     String payload = resultSet.getString(1);
                     String[] payloads = payload.split(",");
                     Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-                    logger.info("result journal" +  payload);
+                    logger.info("Result journal" +  payload);
 //                    System.out.println("result journal" +  payload);
                     if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
                         logger.info("No security found....");
@@ -80,6 +80,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
 
     // Process each position with optimistic locking and retry logic
+    //prior to version 1.2
     public boolean processPosition(TradePositionRepository tradePositionRepository, Trade trade) throws SQLException, InterruptedException {
         boolean isPositionUpdated = false;
         try {
@@ -108,5 +109,9 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
             errorCount = retryMapper.compute(trade.getTradeIdentifier(), (k, i) -> i + 1);
         }
         return errorCount;
+    }
+
+    public int getDlQueueSize(){
+        return this.dlQueue.size();
     }
 }

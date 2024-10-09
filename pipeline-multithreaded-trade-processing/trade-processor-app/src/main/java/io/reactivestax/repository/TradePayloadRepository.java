@@ -2,10 +2,7 @@ package io.reactivestax.repository;
 
 import io.reactivestax.contract.repository.PayloadRepository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 
 import static io.reactivestax.utils.Utility.checkValidity;
 
@@ -51,6 +48,17 @@ public class TradePayloadRepository implements PayloadRepository {
             statement.setString(5, "not_posted");
             statement.setString(6, payload);
             statement.executeUpdate();
+        }
+    }
+
+    public Integer selectTradePayload() throws Exception {
+        String insertQuery = "SELECT count(*) FROM trade_payloads";
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()){
+                return  resultSet.getInt(1);
+            }
+            return 0;
         }
     }
 

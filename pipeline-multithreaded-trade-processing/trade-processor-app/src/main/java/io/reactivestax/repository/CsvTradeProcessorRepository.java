@@ -53,5 +53,16 @@ public class CsvTradeProcessorRepository implements TradeProcessorRepository {
         }
     }
 
+    public Integer getJournalEntriesCount() throws Exception {
+        String insertQuery = "SELECT count(*) FROM journal_entries";
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()){
+                return  resultSet.getInt(1);
+            }
+            return 0;
+        }
+    }
+
 
 }

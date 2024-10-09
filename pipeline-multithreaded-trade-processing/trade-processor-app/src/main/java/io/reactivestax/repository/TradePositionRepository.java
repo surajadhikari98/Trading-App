@@ -12,7 +12,8 @@ import java.sql.SQLException;
 public class TradePositionRepository implements PositionRepository {
 
     private final Connection connection;
-    public TradePositionRepository(Connection connection){
+
+    public TradePositionRepository(Connection connection) {
         this.connection = connection;
     }
 
@@ -20,7 +21,7 @@ public class TradePositionRepository implements PositionRepository {
     @Override
     public int getCusipVersion(Trade trade) throws SQLException {
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
-        try(PreparedStatement stmt = connection.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, trade.getAccountNumber());
             stmt.setString(2, trade.getCusip());
             ResultSet rs = stmt.executeQuery();
@@ -36,7 +37,7 @@ public class TradePositionRepository implements PositionRepository {
     public boolean insertPosition(Trade trade) throws SQLException {
         connection.setAutoCommit(false);
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
-        try(PreparedStatement stmt = connection.prepareStatement(insertQuery);) {
+        try (PreparedStatement stmt = connection.prepareStatement(insertQuery);) {
             stmt.setString(1, trade.getAccountNumber());
             stmt.setString(2, trade.getCusip());
             stmt.setDouble(3, trade.getQuantity());
@@ -55,7 +56,7 @@ public class TradePositionRepository implements PositionRepository {
         connection.setAutoCommit(false);
         String positionQuery = "SELECT position FROM positions where account_number = ? AND cusip = ?";
         String updateQuery = "UPDATE positions SET position = ?, version = version + 1 WHERE account_number = ? AND cusip = ? AND version = ?";
-        try( PreparedStatement stmt = connection.prepareStatement(updateQuery);
+        try (PreparedStatement stmt = connection.prepareStatement(updateQuery);
              PreparedStatement positionStatement = connection.prepareStatement(positionQuery);) {
             positionStatement.setString(1, trade.getAccountNumber());
             positionStatement.setString(2, trade.getCusip());
@@ -81,5 +82,16 @@ public class TradePositionRepository implements PositionRepository {
             }
         }
         return rowsUpdated > 0;
+    }
+
+    public Integer getPositionCount() throws Exception {
+        String insertQuery = "SELECT count(*) FROM positions";
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+            return 0;
+        }
     }
 }
