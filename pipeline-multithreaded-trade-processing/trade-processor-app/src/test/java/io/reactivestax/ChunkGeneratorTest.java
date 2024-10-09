@@ -12,7 +12,6 @@ import static org.junit.Assert.assertEquals;
 public class ChunkGeneratorTest {
    @Test
     public void testGenerateAndSubmitChunks() throws FileNotFoundException {
-//      TradeCsvChunkGenerator tradeCsvChunkGenerator = mock(TradeCsvChunkGenerator.class);
        String filePath =  Infra.readFromApplicationPropertiesStringFormat("tradeFilePath");
        int numberOfChunks = Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks");
       Integer fileCount = new TradeCsvChunkGenerator().generateAndSubmitChunks(filePath, numberOfChunks);

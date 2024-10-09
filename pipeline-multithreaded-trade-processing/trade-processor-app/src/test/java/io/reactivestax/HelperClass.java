@@ -16,5 +16,4 @@ public class HelperClass {
             statement.execute();
         }
     }
-
 }
