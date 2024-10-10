@@ -32,16 +32,12 @@ public class DBUtils {
         System.out.println("Idle Connections: " + dataSource.getHikariPoolMXBean().getIdleConnections());
         System.out.println("Waiting Threads: " + dataSource.getHikariPoolMXBean().getThreadsAwaitingConnection());
 
-        // Optional HikariCP settings
-//        config.setMinimumIdle(5);
-//        config.setConnectionTimeout(30000);
-//        config.setIdleTimeout(600000);
     }
     public static synchronized DBUtils getInstance() {
-        if(instance==null) {
-            instance = new DBUtils();
-        }
-        return instance;
+            if (instance == null) {
+                instance = new DBUtils();
+            }
+            return instance;
     }
 
     public Connection getConnection() throws SQLException {
