@@ -2,6 +2,7 @@ package io.reactivestax.component;
 
 import io.reactivestax.contract.ChunkGenerator;
 import io.reactivestax.infra.Infra;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,8 +12,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+@Slf4j
 public class TradeCsvChunkGenerator implements ChunkGenerator {
-    private static final Logger logger = Logger.getLogger(TradeCsvChunkGenerator.class.getName());
+//    private static final Logger logger = Logger.getLogger(TradeCsvChunkGenerator.class.getName());
 
     @Override
     public Integer generateAndSubmitChunks(String filePath, Integer numberOfChunks) throws FileNotFoundException {
@@ -23,7 +25,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                 lines.add(line);
             }
         } catch (IOException e) {
-            logger.info("**chunks** " + e.getMessage());
+            log.info("**chunks** {}", e.getMessage());
         }
 
         int totalLines = lines.size();
@@ -50,9 +52,9 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                     startLine.set(endLine);
                     //adding to queue for making the chunk generator and chunk processor decoupled
                     Infra.setChunksFileMappingQueue(outputFile);
-                    logger.info("Created " + outputFile);
+                    log.info("Created  {}", outputFile);
                 } catch (IOException e) {
-                    logger.info("Error in chunks generation" + e.getMessage());
+                    log.info("Error in chunks generation {}", e.getMessage());
                 }
             });
         }

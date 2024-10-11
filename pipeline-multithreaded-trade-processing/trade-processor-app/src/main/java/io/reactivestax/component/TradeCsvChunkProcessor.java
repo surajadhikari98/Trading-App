@@ -5,6 +5,7 @@ import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.repository.TradePayloadRepository;
 import io.reactivestax.utils.Utility;
+import lombok.extern.slf4j.Slf4j;
 
 
 import java.io.*;
@@ -12,18 +13,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
+
+@Slf4j
 public class TradeCsvChunkProcessor implements ChunkProcessor {
 
-    int numberOfChunks;
+//    int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
     List<LinkedBlockingDeque<String>> queueTracker;
-    private static final Logger logger = Logger.getLogger(CsvTradeProcessor.class.getName());
+//    private static final Logger logger = Logger.getLogger(CsvTradeProcessor.class.getName());
 
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, int numberOfChunks, List<LinkedBlockingDeque<String>> queueTracker) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, List<LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
-        this.numberOfChunks = numberOfChunks;
         this.queueTracker = queueTracker;
     }
 
@@ -38,7 +40,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 try {
                     insertTradeIntoTradePayloadTable(chunkFileName);
                 } catch (Exception e) {
-                    logger.info("error while insert into trade payloads" + e.getMessage());
+                    log.info("error while insert into trade payloads {}" ,e.getMessage());
                 }
             });
         }
@@ -74,7 +76,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                         k -> Utility.random()); //generate 1,2,3
             }
             selectAndPutInQueue(trade[0], queueNumber);
-            logger.info("Assigned trade ID: " + trade[0] +  "to queue: " + trade[0] + queueNumber);
+            log.info("Assigned trade ID: {} to queue: {}",  trade[0], queueNumber);
         }
 
         if (!Boolean.parseBoolean(useMap)) {
@@ -87,14 +89,13 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 queueNumber = Utility.random();
             }
             selectAndPutInQueue(trade[0], queueNumber);
-            logger.info("Assigned trade ID " + trade[0] + "to queue"  + trade[0] + queueNumber);
+            log.info("Assigned trade ID {} to queue {} {}", trade[0], trade[0], queueNumber);
         }
-
     }
 
     private void selectAndPutInQueue(String tradeId, Integer queueNumber) throws InterruptedException {
         queueTracker.get(queueNumber - 1).put(tradeId);
-//        logger.info( "Size of: " + queueNumber  + queueTracker.get(queueNumber - 1).size());
+        log.info( "Size of: {} {} " , queueNumber, queueTracker.get(queueNumber - 1).size());
     }
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {

@@ -18,17 +18,14 @@ public class Main {
 
         //process chunks
         List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
-        int numberOfChunks = Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks");
-
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, numberOfChunks, queues);
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, queues);
         tradeCsvChunkProcessor.processChunk();
 
 
         //process trades
         ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("tradeProcessorThreadPoolSize")));
         tradeCsvChunkProcessor.startMultiThreadsForTradeProcessor(executorService);
-
     }
 }
 

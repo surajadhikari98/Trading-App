@@ -6,6 +6,7 @@ import io.reactivestax.exception.OptimisticLockingException;
 import io.reactivestax.hikari.DataSource;
 import io.reactivestax.repository.TradePositionRepository;
 import io.reactivestax.repository.CsvTradeProcessorRepository;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.Map;
@@ -14,12 +15,14 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import  java.util.logging.Logger;
 
+import static java.rmi.server.LogStream.log;
 
+@Slf4j
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
     private final LinkedBlockingDeque<String> dequeue;
     private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     Map<String, Integer> retryMapper = new ConcurrentHashMap<>();
-    private static final Logger logger = Logger.getLogger(CsvTradeProcessor.class.getName());
+//    private static final Logger logger = Logger.getLogger(CsvTradeProcessor.class.getName());
     static AtomicInteger countSec = new AtomicInteger(0);
 
 
@@ -32,7 +35,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         try {
             processTrade();
         } catch (Exception e) {
-            logger.info("trade processor " +  e.getMessage());
+            CsvTradeProcessor.log.info("trade processor:  {}", e.getMessage());
         }
     }
 
@@ -52,18 +55,18 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     String payload = resultSet.getString(1);
                     String[] payloads = payload.split(",");
                     Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-                    logger.info("Result journal" +  payload);
+                    CsvTradeProcessor.log.info("Result journal{}", payload);
 //                    System.out.println("result journal" +  payload);
                     if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
-                        logger.info("No security found....");
-//                        System.out.println("no sec found" + trade.getCusip() + dlQueue.size());
+                        log.warn("No security found....");
+                        System.out.println("no sec found" + trade.getCusip() + dlQueue.size());
                         dlQueue.put(trade.getTradeIdentifier());
-                        System.out.println("times" + trade.getCusip() + countSec.incrementAndGet());
+                        log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
                         continue;
                     }
                     String tradeIdentifier = csvTradeProcessorRepository.callStoredProcedureForJournalAndPositionUpdate(trade);
                     if (tradeIdentifier == null) {
-                        logger.info("Optimistic locking occurred with trade" + trade.getPosition());
+                        log.info("Optimistic locking occurred with trade {}", trade.getPosition());
                         //logic for the retry count
                         if (mappingForRetryCount(trade) < 3) {
                             this.dequeue.addLast(trade.getTradeIdentifier());
@@ -71,7 +74,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                             dlQueue.put(trade.getTradeIdentifier());
                         }
                     } else {
-                        logger.info("Successful insertion for the trade with trade id: " +  tradeIdentifier);
+                        log.info("Successful insertion for the trade with trade id: {}", tradeIdentifier);
                     }
                 }
             }
@@ -91,7 +94,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 isPositionUpdated = tradePositionRepository.updatePosition(trade, version);
             }
         } catch (OptimisticLockingException e) {
-            logger.info("Optimistic locking occurred: {} with position: " + e.getMessage() + trade.getPosition());
+            log.info("Optimistic locking occurred: {} with position: {}", e.getMessage(), trade.getPosition());
             //logic for the retry count
             if (mappingForRetryCount(trade) < 3) {
                 this.dequeue.addLast(trade.getTradeIdentifier());
