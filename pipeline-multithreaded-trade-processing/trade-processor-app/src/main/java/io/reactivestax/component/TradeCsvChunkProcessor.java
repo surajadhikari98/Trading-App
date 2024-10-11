@@ -3,9 +3,12 @@ package io.reactivestax.component;
 import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
+import io.reactivestax.repository.TradePayloadCRUD;
 import io.reactivestax.repository.TradePayloadRepository;
+import io.reactivestax.utils.HibernateUtil;
 import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
 
 
 import java.io.*;
@@ -17,12 +20,9 @@ import java.util.logging.Logger;
 @Slf4j
 public class TradeCsvChunkProcessor implements ChunkProcessor {
 
-//    int numberOfChunks;
     ExecutorService chunkProcessorThreadPool;
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
     List<LinkedBlockingDeque<String>> queueTracker;
-//    private static final Logger logger = Logger.getLogger(CsvTradeProcessor.class.getName());
-
 
     public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, List<LinkedBlockingDeque<String>> queueTracker) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
@@ -48,12 +48,14 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
-        TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(DataSource.getConnection());
+        Session session = TradePayloadCRUD.getInstance().getSession();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             reader.readLine();
             while ((line = reader.readLine()) != null) {
                 String[] split = line.split(",");
-                tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
+                //Hibernate way of insertion
+                TradePayloadCRUD.persistTradePayload(session, line);
+//                tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
                 figureTheNextQueue(split);
             }
         }
