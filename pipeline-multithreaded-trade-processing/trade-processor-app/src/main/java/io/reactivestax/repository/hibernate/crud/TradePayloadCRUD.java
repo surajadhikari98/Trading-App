@@ -1,4 +1,4 @@
-package io.reactivestax.repository;
+package io.reactivestax.repository.hibernate.crud;
 
 import io.reactivestax.entity.TradePayload;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -76,5 +76,4 @@ public class TradePayloadCRUD {
             session.getTransaction().commit();
         }
     }
-
 }

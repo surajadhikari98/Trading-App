@@ -1,11 +1,8 @@
 package io.reactivestax.component;
 
 import io.reactivestax.contract.ChunkProcessor;
-import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
-import io.reactivestax.repository.TradePayloadCRUD;
-import io.reactivestax.repository.TradePayloadRepository;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
 import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
@@ -15,7 +12,6 @@ import java.io.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
 
 @Slf4j
 public class TradeCsvChunkProcessor implements ChunkProcessor {
