@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RabbitMQConsumerCallable implements Callable<Void> {
 
-    private final static String EXCHANGE_NAME = "credit_card_transactions";
+    private final static String EXCHANGE_NAME = "trades";
     private final String queueName;
 
     // Counter for the number of messages consumed

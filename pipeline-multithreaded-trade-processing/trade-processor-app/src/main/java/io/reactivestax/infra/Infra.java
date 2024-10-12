@@ -3,6 +3,7 @@ package io.reactivestax.infra;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,7 +22,9 @@ public class Infra {
     public static String readFromApplicationPropertiesStringFormat(String propertyName) throws FileNotFoundException {
         Properties properties = new Properties();
         String propName = "";
-        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/resources/application.properties";
+//        String filePath = "src/main/resources/application.properties";
+        String filePath = "C:\\Users\\suraj\\source\\full-stack-student-mode\\suad-bootcamp-2024\\pipeline-multithreaded-trade-processing\\trade-processor-app\\src\\main\\resources\\application.properties";
+
 //        String filePath = "src/test/resources/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             properties.load(fileInputStream);
@@ -35,7 +38,9 @@ public class Infra {
     public static int readFromApplicationPropertiesIntegerFormat(String propertyName)  {
         Properties properties = new Properties();
         int propName = 0;
-        String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/resources/application.properties";
+//        String filePath = "src/main/resources/application.properties";
+        String filePath = "C:\\Users\\suraj\\source\\full-stack-student-mode\\suad-bootcamp-2024\\pipeline-multithreaded-trade-processing\\trade-processor-app\\src\\main\\resources\\application.properties";
+
         //for Test environment
 //        String filePath = "src/test/resources/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {

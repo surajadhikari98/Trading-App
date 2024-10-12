@@ -13,16 +13,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
-import  java.util.logging.Logger;
 
-import static java.rmi.server.LogStream.log;
 
 @Slf4j
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
     private final LinkedBlockingDeque<String> dequeue;
     private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     Map<String, Integer> retryMapper = new ConcurrentHashMap<>();
-//    private static final Logger logger = Logger.getLogger(CsvTradeProcessor.class.getName());
     static AtomicInteger countSec = new AtomicInteger(0);
 
 

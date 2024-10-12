@@ -1,42 +1,63 @@
 package io.reactivestax.rabbitmq;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import io.reactivestax.infra.Infra;
+import io.reactivestax.utils.Utility;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Slf4j
 public class RabbitMQProducer {
 
-    private static final String EXCHANGE_NAME = "credit_card_transactions";
+    private static final String EXCHANGE_NAME = "trades";
+    static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
+    Channel channel;
 
-    public static void main(String[] argv) throws Exception {
-        // Setup connection factory
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost"); // Or the RabbitMQ server IP/hostname
-        factory.setUsername("guest"); // RabbitMQ username
-        factory.setPassword("guest"); // RabbitMQ password
+    public RabbitMQProducer(Channel channel) {
+        this.channel = channel;
+    }
 
-        // Establish connection and create channel
-        try (Connection connection = factory.newConnection();
-                Channel channel = connection.createChannel()) {
+    // Get the queue number, or assign one in a round-robin or random manner based on application-properties
+    public void figureTheNextQueue(String[] trade) throws InterruptedException, IOException {
+        String distributionCriteria = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
+        String useMap = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.useMap");
+        String distributionAlgorithm = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.algorithm");
 
-            // Declare an exchange of type direct (or other types based on your routing
-            // strategy)
-            channel.exchangeDeclare(EXCHANGE_NAME, "direct");
 
-            // Publish multiple messages (e.g., credit card transactions)
-            for (int i = 1; i <= 1000; i++) {
-                String routingKey = getRoutingKeyBasedOnCreditCard(i);
-                String message = "Transaction #" + i + " - Amount: " + (100 + i);
-                channel.basicPublish(EXCHANGE_NAME, routingKey, null, message.getBytes("UTF-8"));
-                System.out.println(" [x] Sent '" + message + "' with routing key '" + routingKey + "'");
+        if (Boolean.parseBoolean(useMap)) {
+            int partitionNumber = 0;
+            if (Objects.equals(distributionAlgorithm, "round-robin")) {
+                partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
+                        k -> Utility.roundRobin()); //generate 1,2,3
+            } else if (Objects.equals(distributionAlgorithm, "random")) {
+                partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
+                        k -> Utility.random()); //generate 1,2,3
             }
+            selectAndPublish(trade[0], partitionNumber);
+            log.info("Assigned trade ID: {} to queue: {}",  trade[0], partitionNumber);
+        }
+
+        if (!Boolean.parseBoolean(useMap)) {
+            int queueNumber = 0;
+            if (distributionAlgorithm.equals("round-robin")) {
+                queueNumber = Utility.roundRobin();
+            }
+
+            if (distributionAlgorithm.equals("random")) {
+                queueNumber = Utility.random();
+            }
+            selectAndPublish(trade[0], queueNumber);
+            log.info("Assigned trade ID {} to queue {} {}", trade[0], trade[0], queueNumber);
         }
     }
 
-    // Simulate getting routing key based on credit card number
-    private static String getRoutingKeyBasedOnCreditCard(int transactionId) {
-        // For simplicity, route based on the transaction ID, e.g., to mimic credit card
-        // partitioning
-        return "cc_partition_" + (transactionId % 3);
+    private void selectAndPublish(String tradeId, Integer queueNumber) throws InterruptedException, IOException {
+        String routingKey = "cc_partition_" + (queueNumber - 1);
+        channel.basicPublish(EXCHANGE_NAME, routingKey, null, tradeId.getBytes("UTF-8"));
+        System.out.println(" [x] Sent '" + tradeId + "' with routing key '" + routingKey + "'");
     }
+
 }
