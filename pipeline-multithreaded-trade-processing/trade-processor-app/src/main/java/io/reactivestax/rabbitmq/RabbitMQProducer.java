@@ -14,14 +14,10 @@ public class RabbitMQProducer {
 
     private static final String EXCHANGE_NAME = "trades";
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
-    Channel channel;
 
-    public RabbitMQProducer(Channel channel) {
-        this.channel = channel;
-    }
 
     // Get the queue number, or assign one in a round-robin or random manner based on application-properties
-    public void figureTheNextQueue(String[] trade) throws InterruptedException, IOException {
+    public static void figureTheNextQueue(String[] trade, Channel channel) throws InterruptedException, IOException {
         String distributionCriteria = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
         String useMap = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.useMap");
         String distributionAlgorithm = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.algorithm");
@@ -36,7 +32,7 @@ public class RabbitMQProducer {
                 partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
                         k -> Utility.random()); //generate 1,2,3
             }
-            selectAndPublish(trade[0], partitionNumber);
+            selectAndPublish(trade[0], partitionNumber, channel);
             log.info("Assigned trade ID: {} to queue: {}",  trade[0], partitionNumber);
         }
 
@@ -49,12 +45,12 @@ public class RabbitMQProducer {
             if (distributionAlgorithm.equals("random")) {
                 queueNumber = Utility.random();
             }
-            selectAndPublish(trade[0], queueNumber);
+            selectAndPublish(trade[0], queueNumber, channel);
             log.info("Assigned trade ID {} to queue {} {}", trade[0], trade[0], queueNumber);
         }
     }
 
-    private void selectAndPublish(String tradeId, Integer queueNumber) throws InterruptedException, IOException {
+    private static void selectAndPublish(String tradeId, Integer queueNumber, Channel channel) throws InterruptedException, IOException {
         String routingKey = "cc_partition_" + (queueNumber - 1);
         channel.basicPublish(EXCHANGE_NAME, routingKey, null, tradeId.getBytes("UTF-8"));
         System.out.println(" [x] Sent '" + tradeId + "' with routing key '" + routingKey + "'");

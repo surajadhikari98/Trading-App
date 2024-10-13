@@ -9,28 +9,23 @@ import java.util.concurrent.TimeoutException;
 
 public class RabbitMQUtils {
 
-    private static Channel channel;
 
-    public static Channel setUpConnection() throws IOException, TimeoutException {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost"); // Or the RabbitMQ server IP/hostname
-        factory.setUsername("guest"); // RabbitMQ username
-        factory.setPassword("guest"); // RabbitMQ password
+    // Single connection setup
+    private static Connection connection;
 
-        // Establish connection and create channel
-        try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
-            return channel;
+    public static Connection getConnection() throws IOException, TimeoutException {
+        if (connection == null || !connection.isOpen()) {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            factory.setUsername("guest");
+            factory.setPassword("guest");
+            connection = factory.newConnection();
         }
+        return connection;
     }
 
-    // Thread-safe singleton access to SessionFactory
-    public static Channel getChannel() throws IOException, TimeoutException {
-        if (channel == null) {
-            synchronized (HibernateUtil.class) {
-                    channel = setUpConnection();
-            }
-        }
-        return channel;
+    // For each thread, create a new channel from the shared connection
+    public static Channel createChannel() throws IOException, TimeoutException {
+        return getConnection().createChannel();
     }
 }
