@@ -38,5 +38,4 @@ public class Position {
     @Column(name = "created_date_time")
     @CreationTimestamp
     private Date createdDateTime;
-
 }

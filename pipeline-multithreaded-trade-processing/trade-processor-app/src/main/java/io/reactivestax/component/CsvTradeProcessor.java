@@ -52,13 +52,9 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     public void processTrade() throws Exception {
         CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
         int partitionNumber = Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues");
-        // Declare an exchange and queue, then bind them
         Channel channel = RabbitMQUtils.createChannel();
-
-        // Declare an exchange and a single queue
         channel.exchangeDeclare(EXCHANGE_NAME, "direct");
 
-        // Declare a single queue
         String queueName = "all_partitions_queue";
         channel.queueDeclare(queueName, true, false, false, null);
 
@@ -73,7 +69,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String tradeId = new String(delivery.getBody(), "UTF-8");
             System.out.println(" [x] Received '" + tradeId + "' with routing key '" + delivery.getEnvelope().getRoutingKey() + "'");
-            // Add logic here to process the transaction
             String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
             String[] payloads = payload.split(",");
             Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
@@ -95,9 +90,9 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 throw new RuntimeException(e);
             }
         };
-
-            // Start consuming messages
-        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+        // Start consuming messages
+        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
+        });
 
         // Use a CountDownLatch to wait indefinitely
         CountDownLatch latch = new CountDownLatch(1);
@@ -106,12 +101,12 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
 
     public void processPosition(Trade trade) throws SQLException, InterruptedException {
-            Integer version = TradePositionCRUD.getCusipVersion(trade);
-            if (version != null) {
-                TradePositionCRUD.updatePosition(trade, version);
-            } else {
-                TradePositionCRUD.persistPosition(trade);
-            }
+        Integer version = TradePositionCRUD.getCusipVersion(trade);
+        if (version != null) {
+            TradePositionCRUD.updatePosition(trade, version);
+        } else {
+            TradePositionCRUD.persistPosition(trade);
+        }
     }
 
     public int getDlQueueSize() {
