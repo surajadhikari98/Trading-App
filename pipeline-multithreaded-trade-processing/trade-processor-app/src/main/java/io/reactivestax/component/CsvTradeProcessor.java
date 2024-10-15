@@ -9,8 +9,12 @@ import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.repository.TradePositionRepository;
 import io.reactivestax.repository.CsvTradeProcessorRepository;
+import io.reactivestax.repository.hibernate.crud.JournalEntryCRUD;
+import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
+import io.reactivestax.utils.HibernateUtil;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
 
 import java.sql.*;
 import java.util.Map;
@@ -47,8 +51,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-        CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
-        Connection connection = DataSource.getConnection();
 
         int partitionNumber = Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues");
         // Declare an exchange and queue, then bind them
@@ -73,13 +75,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
             String tradeId = new String(delivery.getBody(), "UTF-8");
             System.out.println(" [x] Received '" + tradeId + "' with routing key '" + delivery.getEnvelope().getRoutingKey() + "'");
             // Add logic here to process the transaction
-            String lookupQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
-            assert connection != null;
-            try (PreparedStatement stmt = connection.prepareStatement(lookupQuery)) {
-                stmt.setString(1, tradeId);
-                ResultSet resultSet = stmt.executeQuery();
-                if (resultSet.next()) {
-                    String payload = resultSet.getString(1);
+                    String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
                     String[] payloads = payload.split(",");
                     Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
                     CsvTradeProcessor.log.info("Result journal{}", payload);
@@ -91,7 +87,12 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 //                        log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
 //                        continue;
 //                    }
-                    csvTradeProcessorRepository.saveJournalEntry(trade);
+                    JournalEntryCRUD.persistJournalEntry(trade);
+//            try {
+//                csvTradeProcessorRepository.saveJournalEntry(trade);
+//            } catch (SQLException e) {
+//                throw new RuntimeException(e);
+//            }
 //                    if (tradeIdentifier == null) {
 //                        log.info("Optimistic locking occurred with trade {}", trade.getPosition());
 //                        //logic for the retry count
@@ -103,10 +104,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 //                    } else {
 //                        log.info("Successful insertion for the trade with trade id: {}", tradeIdentifier);
 //                    }
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
 
         };
 

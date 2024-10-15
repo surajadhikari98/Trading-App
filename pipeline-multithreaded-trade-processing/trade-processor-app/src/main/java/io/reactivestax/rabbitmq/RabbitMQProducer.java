@@ -32,7 +32,7 @@ public class RabbitMQProducer {
                 partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
                         k -> Utility.random()); //generate 1,2,3
             }
-            selectAndPublish(trade[0], partitionNumber, channel);
+            selectAndPublishToMQ(trade[0], partitionNumber, channel);
             log.info("Assigned trade ID: {} to queue: {}",  trade[0], partitionNumber);
         }
 
@@ -45,12 +45,12 @@ public class RabbitMQProducer {
             if (distributionAlgorithm.equals("random")) {
                 queueNumber = Utility.random();
             }
-            selectAndPublish(trade[0], queueNumber, channel);
+            selectAndPublishToMQ(trade[0], queueNumber, channel);
             log.info("Assigned trade ID {} to queue {} {}", trade[0], trade[0], queueNumber);
         }
     }
 
-    private static void selectAndPublish(String tradeId, Integer queueNumber, Channel channel) throws InterruptedException, IOException {
+    private static void selectAndPublishToMQ(String tradeId, Integer queueNumber, Channel channel) throws InterruptedException, IOException {
         String routingKey = "cc_partition_" + (queueNumber - 1);
         channel.basicPublish(EXCHANGE_NAME, routingKey, null, tradeId.getBytes("UTF-8"));
         System.out.println(" [x] Sent '" + tradeId + "' with routing key '" + routingKey + "'");

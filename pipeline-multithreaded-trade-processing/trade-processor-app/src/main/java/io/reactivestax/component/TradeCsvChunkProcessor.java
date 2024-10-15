@@ -2,11 +2,10 @@ package io.reactivestax.component;
 
 import com.rabbitmq.client.Channel;
 import io.reactivestax.contract.ChunkProcessor;
-import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.rabbitmq.RabbitMQProducer;
-import io.reactivestax.repository.TradePayloadRepository;
 import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
+import io.reactivestax.utils.HibernateUtil;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
@@ -14,7 +13,6 @@ import org.hibernate.Session;
 
 import java.io.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -48,7 +46,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
-        Session session = TradePayloadCRUD.getInstance().getSession();
+        Session session = HibernateUtil.getInstance().getSession();
         Channel channel = RabbitMQUtils.createChannel();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             reader.readLine();
@@ -64,8 +62,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
 
 
-    public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws Exception {
-        int partitionNumber = Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues");
+    public void startMultiThreadsForTradeProcessor(ExecutorService executorService) {
         for (LinkedBlockingDeque<String> queues : queueTracker) {
             CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(queues);
             executorService.submit(csvTradeProcessor);

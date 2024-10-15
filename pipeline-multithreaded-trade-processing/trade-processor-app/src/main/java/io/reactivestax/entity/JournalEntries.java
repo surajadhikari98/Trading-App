@@ -1,12 +1,14 @@
 package io.reactivestax.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
 
 @Entity
 @Table(name = "journal_entries")
+@Data
 public class JournalEntries {
 
     @Id

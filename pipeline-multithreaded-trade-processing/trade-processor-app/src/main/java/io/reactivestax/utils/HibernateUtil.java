@@ -1,78 +1,55 @@
 package io.reactivestax.utils;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import io.reactivestax.entity.JournalEntries;
 import io.reactivestax.entity.TradePayload;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistry;
 
-import javax.sql.DataSource;
-
+@Getter
+@Slf4j
 public class HibernateUtil {
-    private static SessionFactory sessionFactory;
+    private static volatile HibernateUtil instance;
 
-    private static SessionFactory buildSessionFactory() {
+    private final SessionFactory sessionFactory;
+
+    private HibernateUtil() {
         try {
-            // HikariCP configuration
-            HikariConfig hikariConfig = new HikariConfig();
-            hikariConfig.setJdbcUrl("jdbc:mysql://localhost:3306/bootcamp");
-            hikariConfig.setUsername("host");
-            hikariConfig.setPassword("password123");
-
-            // HikariCP settings (optional - tune according to your needs)
-            hikariConfig.setMaximumPoolSize(10);
-            hikariConfig.setMinimumIdle(5);
-            hikariConfig.setIdleTimeout(30000);
-            hikariConfig.setConnectionTimeout(20000);
-            hikariConfig.setPoolName("HibernateHikariCP");
-
-            DataSource dataSource = new HikariDataSource(hikariConfig);
-
-            // Hibernate configuration
-            Configuration configuration = new Configuration();
-
-            // Register entity classes
-            configuration.addAnnotatedClass(TradePayload.class);
-            // Add more entities as needed
-
-            // Set Hibernate properties
-            configuration.setProperty("hibernate.show_sql", "true");
-            configuration.setProperty("hibernate.format_sql", "true");
-            configuration.setProperty("hibernate.hbm2ddl.auto", "update"); // Use 'validate' in production
-
-            // Set the datasource
-            configuration.getProperties().put("hibernate.connection.datasource", dataSource);
-
-            // Build the ServiceRegistry
-            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-                    .applySettings(configuration.getProperties())
-                    .build();
-
-            // Build the SessionFactory
-            return configuration.buildSessionFactory(serviceRegistry);
-
-        } catch (Exception ex) {
-            throw new ExceptionInInitializerError("Initial SessionFactory creation failed: " + ex);
+            Configuration configuration = new Configuration()
+                    .configure("hibernate.cfg.xml")
+                    .addAnnotatedClass(TradePayload.class)
+                    .addAnnotatedClass(JournalEntries.class);
+            sessionFactory = configuration.buildSessionFactory();
+        } catch (Throwable ex) {
+            log.error("Initial SessionFactory creation failed");
+            throw new ExceptionInInitializerError(ex);
         }
     }
 
-    // Thread-safe singleton access to SessionFactory
-    public static SessionFactory getSessionFactory() {
-        if (sessionFactory == null) {
+     //Returns the singleton instance of HibernateUtil.
+    public static HibernateUtil getInstance() {
+        if (instance == null) {
             synchronized (HibernateUtil.class) {
-                if (sessionFactory == null) {
-                    sessionFactory = buildSessionFactory();
+                if (instance == null) {
+                    instance = new HibernateUtil();
                 }
             }
         }
-        return sessionFactory;
+        return instance;
     }
 
-    // Shutdown the SessionFactory (optional)
-    public static void shutdown() {
-        if (sessionFactory != null) {
+
+    public Session getSession() {
+        return sessionFactory.openSession();
+    }
+
+    /**
+     * Closes the SessionFactory. Should be called during application shutdown.
+     */
+    public void shutdown() {
+        if (sessionFactory != null && !sessionFactory.isClosed()) {
             sessionFactory.close();
         }
     }
