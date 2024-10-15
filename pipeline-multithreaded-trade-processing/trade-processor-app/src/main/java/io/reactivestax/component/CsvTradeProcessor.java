@@ -11,6 +11,7 @@ import io.reactivestax.repository.TradePositionRepository;
 import io.reactivestax.repository.CsvTradeProcessorRepository;
 import io.reactivestax.repository.hibernate.crud.JournalEntryCRUD;
 import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
+import io.reactivestax.repository.hibernate.crud.TradePositionCRUD;
 import io.reactivestax.utils.HibernateUtil;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +78,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
             String[] payloads = payload.split(",");
             Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
             CsvTradeProcessor.log.info("Result journal{}", payload);
-//                    System.out.println("result journal" +  payload);
+            System.out.println("result journal" + payload);
             try {
                 if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
                     log.warn("No security found....");
@@ -85,21 +86,17 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
                 } else {
                     JournalEntryCRUD.persistJournalEntry(trade);
+//                    processPosition(trade);
                 }
-            } catch (SQLException e) {
-                log.error(e.getMessage());
-            } catch (InterruptedException e) {
-                log.error(e.getMessage());
-            }
 
-            try {
-                csvTradeProcessorRepository.saveJournalEntry(trade);
             } catch (SQLException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         };
 
-        // Start consuming messages
+            // Start consuming messages
         channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
 
         // Use a CountDownLatch to wait indefinitely
@@ -108,37 +105,14 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     }
 
 
-    // Process each position with optimistic locking and retry logic
-    //prior to version 1.2
-    public boolean processPosition(TradePositionRepository tradePositionRepository, Trade trade) throws SQLException, InterruptedException {
-        boolean isPositionUpdated = false;
-        try {
-            int version = tradePositionRepository.getCusipVersion(trade);
-            if (version == -1) {
-                isPositionUpdated = tradePositionRepository.insertPosition(trade);
-            } else {
-                isPositionUpdated = tradePositionRepository.updatePosition(trade, version);
-            }
-        } catch (OptimisticLockingException e) {
-            log.info("Optimistic locking occurred: {} with position: {}", e.getMessage(), trade.getPosition());
-            //logic for the retry count
-            if (mappingForRetryCount(trade) < 3) {
-                this.dequeue.addLast(trade.getTradeIdentifier());
-            } else {
-                dlQueue.put(trade.getTradeIdentifier());
-            }
-        }
-        return isPositionUpdated;
-    }
-
-    public int mappingForRetryCount(Trade trade) {
-        int errorCount;
-        errorCount = retryMapper.putIfAbsent(trade.getTradeIdentifier(), 1);
-        if (retryMapper.get(trade.getTradeIdentifier()) != null) {
-            errorCount = retryMapper.compute(trade.getTradeIdentifier(), (k, i) -> i + 1);
-        }
-        return errorCount;
-    }
+//    public void processPosition(Trade trade) throws SQLException, InterruptedException {
+//            Integer version = TradePositionCRUD.getCusipVersion(trade);
+//            if (version != null) {
+//                TradePositionCRUD.updatePosition(trade, version);
+//            } else {
+//                TradePositionCRUD.persistPosition(trade);
+//            }
+//    }
 
     public int getDlQueueSize() {
         return this.dlQueue.size();

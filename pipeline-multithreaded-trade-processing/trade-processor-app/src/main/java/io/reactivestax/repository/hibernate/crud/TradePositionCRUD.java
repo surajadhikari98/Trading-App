@@ -1,9 +1,7 @@
 package io.reactivestax.repository.hibernate.crud;
 
 import io.reactivestax.domain.Trade;
-import io.reactivestax.entity.JournalEntries;
 import io.reactivestax.entity.Position;
-import io.reactivestax.entity.TradePayload;
 import io.reactivestax.utils.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -11,9 +9,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Version;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
 
 import java.math.BigInteger;
 
@@ -83,13 +79,12 @@ public class TradePositionCRUD {
 
 
     //using the criteria api for returning the payloadByTradeId
-    public static synchronized String getCusipVersion(Trade trade) {
+    public static synchronized Integer getCusipVersion(Trade trade) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-            CriteriaQuery<String> query = criteriaBuilder.createQuery(String.class);
+            CriteriaQuery<Integer> query = criteriaBuilder.createQuery(Integer.class);
             Root<Position> root = query.from(Position.class);
             query.select(root.get("version"));
-//            return session.createQuery(query).getSingleResult();
 
 
             // Add multiple where conditions using criteriaBuilder.and()
@@ -99,7 +94,7 @@ public class TradePositionCRUD {
             // Combine predicates with AND
             query.where(criteriaBuilder.and(accountNumberPredicate, cusipPredicate));
 
-            return session.createQuery(query).getSingleResult();
+            return session.createQuery(query).uniqueResult();
         }
     }
 

@@ -1,6 +1,7 @@
 package io.reactivestax.utils;
 
 import io.reactivestax.entity.JournalEntries;
+import io.reactivestax.entity.Position;
 import io.reactivestax.entity.TradePayload;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class HibernateUtil {
             Configuration configuration = new Configuration()
                     .configure("hibernate.cfg.xml")
                     .addAnnotatedClass(TradePayload.class)
+                    .addAnnotatedClass(Position.class)
                     .addAnnotatedClass(JournalEntries.class);
             sessionFactory = configuration.buildSessionFactory();
         } catch (Throwable ex) {
