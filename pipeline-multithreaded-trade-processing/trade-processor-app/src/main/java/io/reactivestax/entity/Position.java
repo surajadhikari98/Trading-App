@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.util.Date;
 
 @Entity
-//@Table(name = "position")
+@Table(name = "positions")
 @Data
 public class Position {
 

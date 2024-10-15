@@ -86,7 +86,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                     log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
                 } else {
                     JournalEntryCRUD.persistJournalEntry(trade);
-//                    processPosition(trade);
+                    processPosition(trade);
                 }
 
             } catch (SQLException e) {
@@ -105,14 +105,14 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     }
 
 
-//    public void processPosition(Trade trade) throws SQLException, InterruptedException {
-//            Integer version = TradePositionCRUD.getCusipVersion(trade);
-//            if (version != null) {
-//                TradePositionCRUD.updatePosition(trade, version);
-//            } else {
-//                TradePositionCRUD.persistPosition(trade);
-//            }
-//    }
+    public void processPosition(Trade trade) throws SQLException, InterruptedException {
+            Integer version = TradePositionCRUD.getCusipVersion(trade);
+            if (version != null) {
+                TradePositionCRUD.updatePosition(trade, version);
+            } else {
+                TradePositionCRUD.persistPosition(trade);
+            }
+    }
 
     public int getDlQueueSize() {
         return this.dlQueue.size();
