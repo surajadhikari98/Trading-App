@@ -1,6 +1,7 @@
 package io.reactivestax.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -9,6 +10,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "positions")
+@Data
 public class Position {
 
     @Id
@@ -22,6 +24,9 @@ public class Position {
 
     @Column(name = "cusip")
     private String cusip;
+
+    @Column(name = "direction")
+    private String direction;
 
     @Column(name = "position")
     private BigInteger position;

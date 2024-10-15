@@ -6,6 +6,7 @@ import io.reactivestax.utils.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+
 public class JournalEntryCRUD {
 
     public static void persistJournalEntry(Trade trade) {
@@ -32,5 +33,6 @@ public class JournalEntryCRUD {
             }
         }
     }
+
 }
 

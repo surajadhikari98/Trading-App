@@ -34,8 +34,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     private final static String EXCHANGE_NAME = "trades";
 
-
-
     public CsvTradeProcessor(LinkedBlockingDeque<String> dequeue) {
         this.dequeue = dequeue;
     }
@@ -51,7 +49,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-
+        CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
         int partitionNumber = Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues");
         // Declare an exchange and queue, then bind them
         Channel channel = RabbitMQUtils.createChannel();
@@ -75,45 +73,38 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
             String tradeId = new String(delivery.getBody(), "UTF-8");
             System.out.println(" [x] Received '" + tradeId + "' with routing key '" + delivery.getEnvelope().getRoutingKey() + "'");
             // Add logic here to process the transaction
-                    String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
-                    String[] payloads = payload.split(",");
-                    Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
-                    CsvTradeProcessor.log.info("Result journal{}", payload);
+            String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
+            String[] payloads = payload.split(",");
+            Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
+            CsvTradeProcessor.log.info("Result journal{}", payload);
 //                    System.out.println("result journal" +  payload);
-//                    if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
-//                        log.warn("No security found....");
-//                        System.out.println("no sec found" + trade.getCusip() + dlQueue.size());
-//                        dlQueue.put(trade.getTradeIdentifier());
-//                        log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
-//                        continue;
-//                    }
+            try {
+                if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
+                    log.warn("No security found....");
+                    dlQueue.put(trade.getTradeIdentifier());
+                    log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
+                } else {
                     JournalEntryCRUD.persistJournalEntry(trade);
-//            try {
-//                csvTradeProcessorRepository.saveJournalEntry(trade);
-//            } catch (SQLException e) {
-//                throw new RuntimeException(e);
-//            }
-//                    if (tradeIdentifier == null) {
-//                        log.info("Optimistic locking occurred with trade {}", trade.getPosition());
-//                        //logic for the retry count
-//                        if (mappingForRetryCount(trade) < 3) {
-//                            this.dequeue.addLast(trade.getTradeIdentifier());
-//                        } else {
-//                            dlQueue.put(trade.getTradeIdentifier());
-//                        }
-//                    } else {
-//                        log.info("Successful insertion for the trade with trade id: {}", tradeIdentifier);
-//                    }
+                }
+            } catch (SQLException e) {
+                log.error(e.getMessage());
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
+            }
 
+            try {
+                csvTradeProcessorRepository.saveJournalEntry(trade);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         };
 
         // Start consuming messages
-        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
+        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
 
         // Use a CountDownLatch to wait indefinitely
         CountDownLatch latch = new CountDownLatch(1);
         latch.await(); // This will block the main thread forever until countDown() is called
-
     }
 
 
@@ -149,7 +140,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         return errorCount;
     }
 
-    public int getDlQueueSize(){
+    public int getDlQueueSize() {
         return this.dlQueue.size();
     }
 }

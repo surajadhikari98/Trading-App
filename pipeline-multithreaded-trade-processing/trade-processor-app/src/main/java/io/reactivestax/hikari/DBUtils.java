@@ -31,8 +31,8 @@ public class DBUtils {
         System.out.println("Active Connections: " + dataSource.getHikariPoolMXBean().getActiveConnections());
         System.out.println("Idle Connections: " + dataSource.getHikariPoolMXBean().getIdleConnections());
         System.out.println("Waiting Threads: " + dataSource.getHikariPoolMXBean().getThreadsAwaitingConnection());
-
     }
+
     public static synchronized DBUtils getInstance() {
             if (instance == null) {
                 instance = new DBUtils();
