@@ -6,6 +6,7 @@ import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +34,7 @@ public class RabbitMQProducer {
                         k -> Utility.random()); //generate 1,2,3
             }
             selectAndPublishToMQ(trade[0], partitionNumber, channel);
-            log.info("Assigned trade ID: {} to queue: {}",  trade[0], partitionNumber);
+            log.info("Assigned trade ID: {} to queue: {}", trade[0], partitionNumber);
         }
 
         if (!Boolean.parseBoolean(useMap)) {
@@ -50,10 +51,11 @@ public class RabbitMQProducer {
         }
     }
 
-    private static void selectAndPublishToMQ(String tradeId, Integer queueNumber, Channel channel) throws InterruptedException, IOException {
+    private static void selectAndPublishToMQ(String tradeId, Integer queueNumber, Channel channel) throws IOException {
         String routingKey = "cc_partition_" + (queueNumber - 1);
-        channel.basicPublish(EXCHANGE_NAME, routingKey, null, tradeId.getBytes("UTF-8"));
-        System.out.println(" [x] Sent '" + tradeId + "' with routing key '" + routingKey + "'");
+        channel.basicPublish(EXCHANGE_NAME, routingKey, null, tradeId.getBytes(StandardCharsets.UTF_8));
+        System.out.println(" [x] Sent '"+tradeId +"' with routing key '" + routingKey +"'");
     }
+
 
 }

@@ -26,6 +26,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
     private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     static AtomicInteger countSec = new AtomicInteger(0);
+    private final String queueName;
+
+    public CsvTradeProcessor(String queueName) {
+        this.queueName = queueName;
+    }
 
 
     private static final String EXCHANGE_NAME = "trades";
@@ -42,28 +47,22 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public void processTrade() throws Exception {
         CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
-        int partitionNumber = Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues");
         try (Channel channel = RabbitMQUtils.createChannel()) {
             channel.exchangeDeclare(EXCHANGE_NAME, "direct");
 
-            String queueName = "all_partitions_queue";
-            channel.queueDeclare(queueName, true, false, false, null);
-
             // Bind the queue to all three partitions
-            for (int i = 0; i < partitionNumber; i++) {
-                channel.queueBind(queueName, EXCHANGE_NAME, "cc_partition_" + i);
-            }
+            channel.queueDeclare(queueName, true, false, false, null);
+            channel.queueBind(queueName, EXCHANGE_NAME, queueName);
 
             log.info(" [*] Waiting for messages in '{}'.", queueName);
 
-            // Callback to handle the messages
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
                 processJournalWithPosition(tradeId, csvTradeProcessorRepository);
             };
-            // Start consuming messages
-            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
+            });
 
             // Use a CountDownLatch to wait indefinitely
             CountDownLatch latch = new CountDownLatch(1);
@@ -89,12 +88,13 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         } catch (SQLException e) {
             log.error(e.getMessage());
         } catch (InterruptedException e) {
-          log.error(e.getMessage());
+            Thread.currentThread().interrupt();
+            log.error(e.getMessage());
         }
     }
 
 
-    public void processPosition(Trade trade) throws SQLException, InterruptedException {
+    public void processPosition(Trade trade) {
         Integer version = TradePositionCRUD.getCusipVersion(trade);
         if (version != null) {
             TradePositionCRUD.updatePosition(trade, version);

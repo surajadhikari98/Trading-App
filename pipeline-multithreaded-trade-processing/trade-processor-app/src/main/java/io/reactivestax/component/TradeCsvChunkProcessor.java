@@ -62,7 +62,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) {
         for (int i = 0; i < queueTracker.size(); i++) {
-            executorService.submit(new CsvTradeProcessor());
+            executorService.submit(new CsvTradeProcessor("cc_partition_" + i));
         }
         executorService.shutdown();
     }
