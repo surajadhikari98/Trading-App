@@ -103,7 +103,4 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         }
     }
 
-    public int getDlQueueSize() {
-        return this.dlQueue.size();
-    }
 }
