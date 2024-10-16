@@ -19,7 +19,6 @@ import java.util.concurrent.*;
 public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     ExecutorService chunkProcessorThreadPool;
-    static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
     List<LinkedBlockingDeque<String>> queueTracker;
 
     public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, List<LinkedBlockingDeque<String>> queueTracker) {
@@ -44,28 +43,26 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
+
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
         Session session = HibernateUtil.getInstance().getSession();
-        Channel channel = RabbitMQUtils.createChannel();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            reader.readLine();
-            while ((line = reader.readLine()) != null) {
-                String[] split = line.split(",");
-                //Hibernate way of insertion
-                TradePayloadCRUD.persistTradePayload(session, line);
-//                tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
-                RabbitMQProducer.figureTheNextQueue(split, channel);
+        try (Channel channel = RabbitMQUtils.createChannel()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                reader.readLine();
+                while ((line = reader.readLine()) != null) {
+                    String[] split = line.split(",");
+                    TradePayloadCRUD.persistTradePayload(session, line);
+                    RabbitMQProducer.figureTheNextQueue(split, channel);
+                }
             }
         }
     }
 
 
-
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) {
-        for (LinkedBlockingDeque<String> queues : queueTracker) {
-            CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(queues);
-            executorService.submit(csvTradeProcessor);
+        for (int i = 0; i < queueTracker.size(); i++) {
+            executorService.submit(new CsvTradeProcessor());
         }
         executorService.shutdown();
     }

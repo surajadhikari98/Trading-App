@@ -39,7 +39,7 @@ public class TradeProcessorTest {
 
     @Test
     public void shouldCallStoredProcedureAndInsertIntoJournalAndPosition() throws Exception {
-        CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(dequeue);
+        CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor();
         csvTradeProcessor.processTrade();
         int journalEntriesCount = new CsvTradeProcessorRepository(connection).getJournalEntriesCount();
         int positionCount = new TradePositionRepository(connection).getPositionCount();
@@ -57,7 +57,7 @@ public class TradeProcessorTest {
 
     @Test
     public void testLookUpCheckAndDlQueueInsertion() throws Exception {
-        CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor(dequeue);
+        CsvTradeProcessor csvTradeProcessor = new CsvTradeProcessor();
         csvTradeProcessor.processTrade();
         int journalEntriesCount = new CsvTradeProcessorRepository(connection).getJournalEntriesCount();
         int positionCount = new TradePositionRepository(connection).getPositionCount();
