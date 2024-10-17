@@ -27,10 +27,9 @@ public class DataSource {
             logger.error("File is not found: {}", e.getMessage());
         }
 
-
         // Optional HikariCP settings
         config.setMaximumPoolSize(50); // Max 10 connections in the pool
-        config.setMinimumIdle(5); // Minimum idle connections
+        config.setMinimumIdle(10); // Minimum idle connections
         config.setConnectionTimeout(30000); // 30 seconds timeout for obtaining a connection
         config.setIdleTimeout(600000); // 10 minutes idle timeout
 

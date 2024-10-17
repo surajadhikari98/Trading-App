@@ -7,13 +7,17 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import java.math.BigInteger;
 
+@Slf4j
 public class TradePositionCRUD {
+    private TradePositionCRUD() {
+    }
 
     public static void persistPosition(Trade trade) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
@@ -25,13 +29,12 @@ public class TradePositionCRUD {
                 position.setCusip(trade.getCusip());
                 position.setPosition(BigInteger.valueOf(trade.getQuantity()));
                 session.persist(position);
-
                 transaction.commit();
 
             } catch (Exception e) {
                 if (transaction != null) {
                     transaction.rollback();
-                    System.out.println(e.getMessage());
+                    log.error(e.getMessage());
                 }
             }
         }
@@ -51,7 +54,6 @@ public class TradePositionCRUD {
                 Predicate versionClause = cb.equal(root.get("version"), version);
 
                 query.select(root).where(cb.and(accountNumberClause, cusipClause, versionClause)); //for OR we can use cb.or clause
-
                 Position position = session.createQuery(query).uniqueResult();
 
 
@@ -71,7 +73,7 @@ public class TradePositionCRUD {
             } catch (Exception e) {
                 if (transaction != null) {
                     transaction.rollback();
-                    System.out.println(e.getMessage());
+                    log.error(e.getMessage());
                 }
             }
         }

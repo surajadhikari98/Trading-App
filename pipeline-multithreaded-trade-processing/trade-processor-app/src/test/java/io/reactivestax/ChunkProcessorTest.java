@@ -19,10 +19,10 @@ public class ChunkProcessorTest {
     public void testInsertionInTradePayloadTable() throws Exception {
         Connection connection = DataSource.getConnection();
         TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(connection);
-        List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
+//        List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
 
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, queues);
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool);
         tradeCsvChunkProcessor.insertTradeIntoTradePayloadTable("src/test/resources/test_trade.csv");
         int recordsInserted = tradePayloadRepository.selectTradePayload();
         assertEquals(7, recordsInserted);

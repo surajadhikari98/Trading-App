@@ -5,23 +5,25 @@ import io.reactivestax.infra.Infra;
 import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
+
 @Slf4j
 public class RabbitMQProducer {
 
-    private static final String EXCHANGE_NAME = "trades";
     static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
 
 
     // Get the queue number, or assign one in a round-robin or random manner based on application-properties
     public static void figureTheNextQueue(String[] trade, Channel channel) throws InterruptedException, IOException {
-        String distributionCriteria = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
-        String useMap = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.useMap");
-        String distributionAlgorithm = Infra.readFromApplicationPropertiesStringFormat("distributionLogic.algorithm");
+        String distributionCriteria = readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
+        String useMap = readFromApplicationPropertiesStringFormat("distributionLogic.useMap");
+        String distributionAlgorithm = readFromApplicationPropertiesStringFormat("distributionLogic.algorithm");
 
 
         if (Boolean.parseBoolean(useMap)) {
@@ -52,10 +54,13 @@ public class RabbitMQProducer {
     }
 
     private static void selectAndPublishToMQ(String tradeId, Integer queueNumber, Channel channel) throws IOException {
-        String routingKey = "cc_partition_" + (queueNumber - 1);
-        channel.basicPublish(EXCHANGE_NAME, routingKey, null, tradeId.getBytes(StandardCharsets.UTF_8));
-        System.out.println(" [x] Sent '"+tradeId +"' with routing key '" + routingKey +"'");
+        String routingKey = Infra.readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + (queueNumber - 1);
+        channel.basicPublish(
+                readFromApplicationPropertiesStringFormat("rabbitMQ.exchange.name"),
+                routingKey,
+                null,
+                tradeId.getBytes(StandardCharsets.UTF_8)
+        );
+        System.out.println(" [x] Sent '" + tradeId + "' with routing key '" + routingKey + "'");
     }
-
-
 }

@@ -12,6 +12,7 @@ import org.hibernate.cfg.Configuration;
 @Getter
 @Slf4j
 public class HibernateUtil {
+
     private static volatile HibernateUtil instance;
 
     private final SessionFactory sessionFactory;

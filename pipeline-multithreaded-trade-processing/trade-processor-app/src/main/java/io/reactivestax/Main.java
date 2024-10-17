@@ -1,14 +1,15 @@
 package io.reactivestax;
 
+import com.rabbitmq.client.Channel;
 import io.reactivestax.component.TradeCsvChunkGenerator;
 import io.reactivestax.component.TradeCsvChunkProcessor;
 import io.reactivestax.infra.Infra;
+import io.reactivestax.utils.RabbitMQUtils;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.logging.Logger;
 
 public class Main {
 
@@ -17,9 +18,11 @@ public class Main {
         new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("tradeFilePath"), Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks"));
 
         //process chunks
-        List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
+//        Channel channel = RabbitMQUtils.getInstance().createChannel();
+        Infra.setUpQueue();
+//        List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, queues);
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool);
         tradeCsvChunkProcessor.processChunk();
 
 
