@@ -20,9 +20,9 @@ public class DataSource {
         // Configure the HikariCP connection pool
         HikariConfig config = new HikariConfig();
         try {
-            config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("dbUrl"));
-            config.setUsername(Infra.readFromApplicationPropertiesStringFormat("dbUserName"));
-            config.setPassword(Infra.readFromApplicationPropertiesStringFormat("dbPassword"));
+            config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("db.url"));
+            config.setUsername(Infra.readFromApplicationPropertiesStringFormat("db.user.name"));
+            config.setPassword(Infra.readFromApplicationPropertiesStringFormat("db.password"));
         } catch (FileNotFoundException e) {
             logger.error("File is not found: {}", e.getMessage());
         }
@@ -40,9 +40,9 @@ public class DataSource {
 
     private DataSource() throws FileNotFoundException {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("dbUrl"));
-        config.setUsername(Infra.readFromApplicationPropertiesStringFormat("dbUserName"));
-        config.setPassword(Infra.readFromApplicationPropertiesStringFormat("dbPassword"));
+        config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("db.url"));
+        config.setUsername(Infra.readFromApplicationPropertiesStringFormat("db.user.name"));
+        config.setPassword(Infra.readFromApplicationPropertiesStringFormat("db.password"));
 
         // Optional HikariCP settings
         config.setMaximumPoolSize(50); // Max 10 connections in the pool

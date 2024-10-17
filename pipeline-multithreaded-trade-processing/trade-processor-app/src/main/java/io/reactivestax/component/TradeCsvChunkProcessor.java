@@ -28,7 +28,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     @Override
     public void processChunk() throws Exception {
-        int chunkProcessorThreadPoolSize = Infra.readFromApplicationPropertiesIntegerFormat("chunkProcessorThreadPoolSize");
+        int chunkProcessorThreadPoolSize = Infra.readFromApplicationPropertiesIntegerFormat("chunk.processor.thread.pool.size");
         for (int i = 0; i < chunkProcessorThreadPoolSize; i++) {
             //consulting to the queue for reading the chunksFile
             String chunkFileName = Infra.getChunksFileMappingQueue().take();
@@ -59,7 +59,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     }
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws FileNotFoundException {
-        for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues"); i++) {
+        for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
             executorService.submit(
                     new CsvTradeProcessor(Infra.readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + i));
         }

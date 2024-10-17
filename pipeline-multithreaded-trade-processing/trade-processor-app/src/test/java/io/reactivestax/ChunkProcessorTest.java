@@ -7,7 +7,6 @@ import io.reactivestax.repository.TradePayloadRepository;
 import org.junit.Test;
 
 import java.sql.Connection;
-import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
@@ -19,7 +18,7 @@ public class ChunkProcessorTest {
     public void testInsertionInTradePayloadTable() throws Exception {
         Connection connection = DataSource.getConnection();
         TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(connection);
-        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
+        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunk.processor.thread.pool.size")));
 
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool);
         tradeCsvChunkProcessor.insertTradeIntoTradePayloadTable("src/test/resources/test_trade.csv");

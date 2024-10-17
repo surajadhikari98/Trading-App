@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Utility {
 
     public static AtomicInteger roundRobinIndex = new AtomicInteger(0);
-      static int numberOfQueues = Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues");
+      static int numberOfQueues = Infra.readFromApplicationPropertiesIntegerFormat("number.queues");
 
       public static int roundRobin(){
        return roundRobinIndex.incrementAndGet() % numberOfQueues + 1;

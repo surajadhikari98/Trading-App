@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,26 +23,27 @@ public class Infra {
     private static final Integer QUEUES_NUMBER;
 
     static {
-        QUEUES_NUMBER = readFromApplicationPropertiesIntegerFormat("numberOfQueues");
+        QUEUES_NUMBER = readFromApplicationPropertiesIntegerFormat("number.queues");
     }
 
-    public static synchronized void setUpQueue(Channel channel) throws IOException, TimeoutException {
-//        try (Channel channel = RabbitMQUtils.getChannel()) {
+    public static synchronized void setUpQueue() throws IOException, TimeoutException {
+        try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
             String exchangeName = readFromApplicationPropertiesStringFormat("rabbitMQ.exchange.name");
             Map<String, Object> args = new HashMap<>();
             args.put("x-dead-letter-exchange", exchangeName);
             args.put("x-dead-letter-routing-key", "dead");
             args.put("x-queue-type", "quorum");
-            args.put("x-delivery-limit", readFromApplicationPropertiesStringFormat("maxRetryCount"));
+            args.put("x-delivery-limit", readFromApplicationPropertiesStringFormat("max.retry.count"));
 
             System.out.println("RabbitMQ exchange created " + exchangeName);
-            for (int i = 0; i < readFromApplicationPropertiesIntegerFormat("numberOfQueues"); i++) {
+            for (int i = 0; i < readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
                 String queueName = readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + i;
                 channel.queueDeclare(queueName, true, false, false, args);
                 channel.queueBind(queueName, exchangeName, queueName);
                 System.out.println("Queue created for = " + queueName);
             }
-//        }
+        }
+
     }
 
 
@@ -51,7 +51,6 @@ public class Infra {
         Properties properties = new Properties();
         String propName = "";
         String filePath = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/resources/application.properties";
-//        String filePath = "src/test/resources/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             properties.load(fileInputStream);
             return properties.getProperty(propertyName);
