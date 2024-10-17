@@ -30,14 +30,10 @@ public class HibernateUtil {
         }
     }
 
-     //Returns the singleton instance of HibernateUtil.
-    public static HibernateUtil getInstance() {
+    //Returns the singleton instance of HibernateUtil.
+    public static synchronized HibernateUtil getInstance() {
         if (instance == null) {
-            synchronized (HibernateUtil.class) {
-                if (instance == null) {
-                    instance = new HibernateUtil();
-                }
-            }
+            instance = new HibernateUtil();
         }
         return instance;
     }
