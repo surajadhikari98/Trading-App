@@ -21,9 +21,8 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     ExecutorService chunkProcessorThreadPool;
     List<LinkedBlockingDeque<String>> queueTracker;
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool, List<LinkedBlockingDeque<String>> queueTracker) {
+    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
-        this.queueTracker = queueTracker;
     }
 
 
@@ -47,7 +46,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
         Session session = HibernateUtil.getInstance().getSession();
-        try (Channel channel = RabbitMQUtils.createChannel()) {
+        try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
@@ -59,10 +58,10 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
         }
     }
 
-
-    public void startMultiThreadsForTradeProcessor(ExecutorService executorService) {
-        for (int i = 0; i < queueTracker.size(); i++) {
-            executorService.submit(new CsvTradeProcessor("cc_partition_" + i));
+    public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws FileNotFoundException {
+        for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("numberOfQueues"); i++) {
+            executorService.submit(
+                    new CsvTradeProcessor(Infra.readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + i));
         }
         executorService.shutdown();
     }

@@ -1,19 +1,16 @@
 package io.reactivestax.component;
 
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import io.reactivestax.contract.TradeProcessor;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.hikari.DataSource;
-import io.reactivestax.infra.Infra;
 import io.reactivestax.repository.CsvTradeProcessorRepository;
 import io.reactivestax.repository.hibernate.crud.JournalEntryCRUD;
 import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
 import io.reactivestax.repository.hibernate.crud.TradePositionCRUD;
 import io.reactivestax.utils.RabbitMQUtils;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -22,18 +19,20 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
+
 @Slf4j
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
     private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     static AtomicInteger countSec = new AtomicInteger(0);
     private final String queueName;
+//    private final Channel channel;
 
     public CsvTradeProcessor(String queueName) {
         this.queueName = queueName;
+
     }
 
-
-    private static final String EXCHANGE_NAME = "trades";
 
     @Override
     public void run() {
@@ -47,27 +46,35 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     @Override
     public void processTrade() throws Exception {
         CsvTradeProcessorRepository csvTradeProcessorRepository = new CsvTradeProcessorRepository(DataSource.getConnection());
-        try (Channel channel = RabbitMQUtils.createChannel()) {
-            channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+        try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
+    log.info(" [*] Waiting for messages in '{}'.", queueName);
 
-            // Bind the queue to all three partitions
-            channel.queueDeclare(queueName, true, false, false, null);
-            channel.queueBind(queueName, EXCHANGE_NAME, queueName);
-
-            log.info(" [*] Waiting for messages in '{}'.", queueName);
-
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
-                processJournalWithPosition(tradeId, csvTradeProcessorRepository);
-            };
-            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
-            });
-
-            // Use a CountDownLatch to wait indefinitely
-            CountDownLatch latch = new CountDownLatch(1);
-            latch.await(); // This will block the main thread forever until countDown() is called
+    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
+        try {
+            processJournalWithPosition(tradeId, csvTradeProcessorRepository);
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+            log.info("Position insertion successful ===========>");
+        } catch (Exception e) {
+            log.error("Journal Entry and position processing failed, retrying");
+            channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
         }
+    };
+    channel.basicConsume(
+            queueName,
+            false,          //second parameter false means auto-acknowledge is false
+            deliverCallback,
+            consumerTag ->
+            {
+            });
+    // Use a CountDownLatch to wait indefinitely
+    CountDownLatch latch = new CountDownLatch(1);
+    latch.await(); // This will block the main thread forever until countDown() is called
+}catch (Exception e){
+    System.out.println(e.getMessage());
+    throw  new RuntimeException(e.getMessage());
+}
     }
 
     private void processJournalWithPosition(String tradeId, CsvTradeProcessorRepository csvTradeProcessorRepository) {
