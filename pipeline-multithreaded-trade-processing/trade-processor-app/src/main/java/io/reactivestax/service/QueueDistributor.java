@@ -1,7 +1,7 @@
-package io.reactivestax.rabbitmq;
+package io.reactivestax.service;
 
-import com.rabbitmq.client.Channel;
 import io.reactivestax.infra.Infra;
+import io.reactivestax.utils.RabbitMQUtils;
 import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,17 +9,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 
+import static factory.BeanFactory.getQueueMessageSender;
 import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
 
 @Slf4j
-public class RabbitMQProducer {
-
-    static ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
-
+public class QueueDistributor {
 
     // Get the queue number, or assign one in a round-robin or random manner based on application-properties
-    public static void figureTheNextQueue(String[] trade, Channel channel) throws InterruptedException, IOException {
+    public static void figureTheNextQueue(String[] trade) throws InterruptedException, IOException, TimeoutException {
+
+        ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
         String distributionCriteria = readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
         String useMap = readFromApplicationPropertiesStringFormat("distributionLogic.useMap");
         String distributionAlgorithm = readFromApplicationPropertiesStringFormat("distributionLogic.algorithm");
@@ -34,7 +35,8 @@ public class RabbitMQProducer {
                 partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
                         k -> Utility.random()); //generate 1,2,3
             }
-            selectAndPublishToMQ(trade[0], partitionNumber, channel);
+            String queueName = readFromApplicationPropertiesStringFormat("queue.name") + (partitionNumber - 1);
+            getQueueMessageSender().sendMessageToQueue(queueName,trade[0]);
             log.info("Assigned trade ID: {} to queue: {}", trade[0], partitionNumber);
         }
 
@@ -47,19 +49,9 @@ public class RabbitMQProducer {
             if (distributionAlgorithm.equals("random")) {
                 queueNumber = Utility.random();
             }
-            selectAndPublishToMQ(trade[0], queueNumber, channel);
+            String queueName = readFromApplicationPropertiesStringFormat("queue.name") + (queueNumber - 1);
+            getQueueMessageSender().sendMessageToQueue(queueName,trade[0]);
             log.info("Assigned trade ID {} to queue {} {}", trade[0], trade[0], queueNumber);
         }
-    }
-
-    private static void selectAndPublishToMQ(String tradeId, Integer queueNumber, Channel channel) throws IOException {
-        String routingKey = Infra.readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + (queueNumber - 1);
-        channel.basicPublish(
-                readFromApplicationPropertiesStringFormat("rabbitMQ.exchange.name"),
-                routingKey,
-                null,
-                tradeId.getBytes(StandardCharsets.UTF_8)
-        );
-        System.out.println(" [x] Sent '" + tradeId + "' with routing key '" + routingKey + "'");
     }
 }

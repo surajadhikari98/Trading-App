@@ -5,11 +5,8 @@ import io.reactivestax.utils.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import lombok.Getter;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 
 import java.util.List;
 
@@ -18,7 +15,22 @@ import static io.reactivestax.utils.Utility.checkValidity;
 
 public class TradePayloadCRUD {
 
-    public static synchronized void persistTradePayload(Session session, String payload) {
+    private static TradePayloadCRUD instance;
+
+    private Session session = HibernateUtil.getInstance().getSession();
+
+    private TradePayloadCRUD(){}
+
+    public synchronized TradePayloadCRUD getInstance(){
+        if(instance == null) {
+            instance = new TradePayloadCRUD();
+        }
+        return instance;
+    }
+
+
+
+    public void persistTradePayload(String payload) {
         if (payload != null) {
             String[] split = payload.split(",");
             TradePayload tradePayload = new TradePayload();
@@ -32,12 +44,12 @@ public class TradePayloadCRUD {
             Transaction transaction = session.beginTransaction();
             session.persist(tradePayload);
             transaction.commit();
+
         }
     }
 
     //using the criteria api for returning the count
-    public static int readTradePayloadCount() {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+    public  int readTradePayloadCount() {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Long> query = criteriaBuilder.createQuery(Long.class);
             Root<TradePayload> root = query.from(TradePayload.class);
@@ -45,10 +57,8 @@ public class TradePayloadCRUD {
             List<Long> resultList = session.createQuery(query).getResultList();
             return resultList.size();
         }
-    }
 
-    public static void updateLookUpAndJournalStatus(String tradeId) {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+    public void updateLookUpAndJournalStatus(String tradeId) {
             session.beginTransaction();
             TradePayload tradePayload = session.get(TradePayload.class, tradeId);
             tradePayload.setLookupStatus("pass");
@@ -58,7 +68,7 @@ public class TradePayloadCRUD {
     }
 
     //using the criteria api for returning the payloadByTradeId
-    public static synchronized String readTradePayloadByTradeId(String tradeId) {
+    public static String readTradePayloadByTradeId(String tradeId) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<String> query = criteriaBuilder.createQuery(String.class);

@@ -1,10 +1,8 @@
 package io.reactivestax;
 
-import com.rabbitmq.client.Channel;
-import io.reactivestax.component.TradeCsvChunkGenerator;
-import io.reactivestax.component.TradeCsvChunkProcessor;
+import io.reactivestax.service.TradeCsvChunkGenerator;
+import io.reactivestax.service.TradeCsvChunkProcessor;
 import io.reactivestax.infra.Infra;
-import io.reactivestax.utils.RabbitMQUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

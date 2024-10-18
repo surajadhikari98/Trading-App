@@ -1,14 +1,10 @@
-package io.reactivestax.component;
+package io.reactivestax.service;
 
-import com.rabbitmq.client.Channel;
 import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.infra.Infra;
-import io.reactivestax.rabbitmq.RabbitMQProducer;
+import io.reactivestax.rabbitmq.RabbitMQMessageSender;
 import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
-import io.reactivestax.utils.HibernateUtil;
-import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Session;
 
 
 import java.io.*;
@@ -45,23 +41,21 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
-        Session session = HibernateUtil.getInstance().getSession();
-        try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
                     String[] split = line.split(",");
-                    TradePayloadCRUD.persistTradePayload(session, line);
-                    RabbitMQProducer.figureTheNextQueue(split, channel);
+                    TradePayloadCRUD.persistTradePayload(line);
+                    QueueDistributor.figureTheNextQueue(split);
                 }
             }
         }
-    }
+
 
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws FileNotFoundException {
         for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
             executorService.submit(
-                    new CsvTradeProcessor(Infra.readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + i));
+                    new CsvTradeProcessor(Infra.readFromApplicationPropertiesStringFormat("queue.name") + i));
         }
         executorService.shutdown();
     }

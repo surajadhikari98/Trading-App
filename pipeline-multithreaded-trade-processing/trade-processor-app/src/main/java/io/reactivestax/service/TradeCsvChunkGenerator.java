@@ -1,4 +1,4 @@
-package io.reactivestax.component;
+package io.reactivestax.service;
 
 import io.reactivestax.contract.ChunkGenerator;
 import io.reactivestax.infra.Infra;
@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 @Slf4j
 public class TradeCsvChunkGenerator implements ChunkGenerator {

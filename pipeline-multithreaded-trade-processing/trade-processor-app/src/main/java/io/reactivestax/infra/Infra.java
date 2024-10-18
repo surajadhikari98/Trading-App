@@ -16,8 +16,11 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class Infra {
 
+    private Infra(){}
+
     @Getter
     private static final LinkedBlockingQueue<String> chunksFileMappingQueue = new LinkedBlockingQueue<>();
+    @Getter
     private static final List<LinkedBlockingDeque<String>> QUEUE_LIST = new ArrayList<>();
     private static final Map<String, LinkedBlockingDeque<String>> QUEUE_MAP = new HashMap<>();
     private static final Integer QUEUES_NUMBER;
@@ -37,7 +40,7 @@ public class Infra {
 
             System.out.println("RabbitMQ exchange created " + exchangeName);
             for (int i = 0; i < readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
-                String queueName = readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + i;
+                String queueName = readFromApplicationPropertiesStringFormat("queue.name") + i;
                 channel.queueDeclare(queueName, true, false, false, args);
                 channel.queueBind(queueName, exchangeName, queueName);
                 System.out.println("Queue created for = " + queueName);

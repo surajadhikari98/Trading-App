@@ -1,6 +1,6 @@
 package io.reactivestax;
 
-import io.reactivestax.component.TradeCsvChunkProcessor;
+import io.reactivestax.service.TradeCsvChunkProcessor;
 import io.reactivestax.hikari.DataSource;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.repository.TradePayloadRepository;

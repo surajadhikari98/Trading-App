@@ -1,6 +1,6 @@
 package io.reactivestax;
 
-import io.reactivestax.component.TradeCsvChunkGenerator;
+import io.reactivestax.service.TradeCsvChunkGenerator;
 import io.reactivestax.infra.Infra;
 import org.junit.Test;
 
