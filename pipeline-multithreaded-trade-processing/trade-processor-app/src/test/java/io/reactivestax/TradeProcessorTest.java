@@ -4,8 +4,8 @@
 //import io.reactivestax.component.TradeCsvChunkProcessor;
 //import io.reactivestax.hikari.DataSource;
 //import io.reactivestax.infra.Infra;
-//import io.reactivestax.repository.CsvTradeProcessorRepository;
-//import io.reactivestax.repository.TradePositionRepository;
+//import io.reactivestax.repository.jdbc.CsvTradeProcessorRepository;
+//import io.reactivestax.repository.jdbc.TradePositionRepository;
 //import org.junit.Before;
 //import org.junit.Test;
 //

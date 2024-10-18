@@ -1,11 +1,12 @@
-package factory;
+package io.reactivestax.factory;
 
 import io.reactivestax.contract.MessageSender;
 import io.reactivestax.exception.InvalidPersistenceTechnologyException;
 import io.reactivestax.infra.Infra;
-import io.reactivestax.rabbitmq.InMemoryQueueMessageSender;
-import io.reactivestax.rabbitmq.RabbitMQMessageSender;
-import io.reactivestax.repository.TradePayloadRepository;
+import io.reactivestax.message.sender.InMemoryQueueMessageSender;
+import io.reactivestax.message.sender.RabbitMQMessageSender;
+import io.reactivestax.repository.jdbc.TradePayloadRepository;
+import io.reactivestax.repository.hibernate.TradePayloadCRUD;
 
 import java.io.FileNotFoundException;
 
@@ -35,7 +36,7 @@ public class BeanFactory {
     public static TradePayloadRepository getTradePayloadRepository() throws FileNotFoundException {
         String messagingTechnology = Infra.readFromApplicationPropertiesStringFormat("persistence.technology");
         if(HIBERNATE_PERSISTENCE_TECHNOLOGY.equals(messagingTechnology)){
-            return HibernateTradePayloadRepository.getInstance();
+            return TradePayloadCRUD.getInstance();
         } else if(JDBC_PERSISTENCE_TECHNOLOGY.equals(messagingTechnology)){
             return JDBCTradePayloadRepository.getInstance();
         } else{

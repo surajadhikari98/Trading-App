@@ -1,19 +1,17 @@
-package io.reactivestax.repository;
+package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.TradeProcessorRepository;
 import io.reactivestax.domain.Trade;
-import io.reactivestax.hikari.DataSource;
+import io.reactivestax.utils.DBUtils;
 
+import java.io.FileNotFoundException;
 import java.sql.*;
 
 public class CsvTradeProcessorRepository implements TradeProcessorRepository {
 
 
-    private final Connection connection = DataSource.getConnection();
 
     private static CsvTradeProcessorRepository instance;
-
-
 
     private CsvTradeProcessorRepository() {
     }
@@ -27,7 +25,8 @@ public class CsvTradeProcessorRepository implements TradeProcessorRepository {
 
 
     @Override
-    public void saveJournalEntry(Trade trade) throws SQLException {
+    public void saveJournalEntry(Trade trade) throws SQLException, FileNotFoundException {
+        Connection connection = DBUtils.getInstance().getConnection();
         String insertQuery = "INSERT INTO journal_entries (trade_id, trade_date, account_number,cusip,direction, quantity, price) VALUES (?, ?, ?, ?, ?, ?, ?)";
         assert connection != null;
         try (PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
@@ -43,7 +42,8 @@ public class CsvTradeProcessorRepository implements TradeProcessorRepository {
     }
 
    @Override
-    public boolean lookUpSecurityByCUSIP(String cusip) throws SQLException {
+    public boolean lookUpSecurityByCUSIP(String cusip) throws SQLException, FileNotFoundException {
+       Connection connection = DBUtils.getInstance().getConnection();
         String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
        assert connection != null;
        try(PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);) {
@@ -54,6 +54,7 @@ public class CsvTradeProcessorRepository implements TradeProcessorRepository {
 
     public String callStoredProcedureForJournalAndPositionUpdate(Trade trade) throws Exception {
         String sql = "CALL insert_journal_and_position(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        Connection connection = DBUtils.getInstance().getConnection();
         assert connection != null;
         try (CallableStatement stmt = connection.prepareCall(sql)) {
             // Step 4: Set the input parameters
@@ -72,6 +73,7 @@ public class CsvTradeProcessorRepository implements TradeProcessorRepository {
     }
 
     public Integer getJournalEntriesCount() throws Exception {
+        Connection connection = DBUtils.getInstance().getConnection();
         String insertQuery = "SELECT count(*) FROM journal_entries";
         assert connection != null;
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {

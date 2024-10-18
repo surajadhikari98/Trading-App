@@ -1,4 +1,4 @@
-package io.reactivestax.rabbitmq;
+package io.reactivestax.message.sender;
 
 import io.reactivestax.contract.MessageSender;
 import io.reactivestax.utils.RabbitMQUtils;

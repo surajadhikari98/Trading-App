@@ -1,4 +1,4 @@
-package io.reactivestax.repository.hibernate.crud;
+package io.reactivestax.repository.hibernate;
 
 import io.reactivestax.domain.Trade;
 import io.reactivestax.entity.JournalEntries;

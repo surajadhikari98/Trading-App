@@ -1,6 +1,9 @@
-package io.reactivestax.repository.hibernate.crud;
+package io.reactivestax.repository.hibernate;
 
+import io.reactivestax.contract.repository.PayloadRepository;
 import io.reactivestax.entity.TradePayload;
+import io.reactivestax.enums.LookUpStatusEnum;
+import io.reactivestax.enums.PostedStatusEnum;
 import io.reactivestax.utils.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -8,17 +11,18 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
 import java.util.List;
 
 import static io.reactivestax.utils.Utility.checkValidity;
 
 
-public class TradePayloadCRUD {
+public class TradePayloadCRUD implements PayloadRepository {
 
     private static TradePayloadCRUD instance;
 
-    private TradePayloadCRUD() {
-    }
+    private TradePayloadCRUD() {}
 
     public static synchronized TradePayloadCRUD getInstance() {
         if (instance == null) {
@@ -27,23 +31,20 @@ public class TradePayloadCRUD {
         return instance;
     }
 
-
-    public void persistTradePayload(String payload) {
-        if (payload != null) {
-            try (Session session = HibernateUtil.getInstance().getSession()) {
-                String[] split = payload.split(",");
-                TradePayload tradePayload = new TradePayload();
-                tradePayload.setTradeId(split[0]);
-                tradePayload.setValidityStatus(checkValidity(split) ? "valid" : "inValid");
-                tradePayload.setStatusReason(checkValidity(split) ? "All field present " : "Fields missing");
-                tradePayload.setLookupStatus("fail");
-                tradePayload.setJeStatus("not_posted");
-                tradePayload.setPayload(payload);
-                Transaction transaction = session.beginTransaction();
-                session.persist(tradePayload);
-                transaction.commit();
-
-            }
+    @Override
+    public void insertTradeIntoTradePayloadTable(String payload) throws Exception {
+        try (Session session = HibernateUtil.getInstance().getSession()) {
+            String[] split = payload.split(",");
+            TradePayload tradePayload = new TradePayload();
+            tradePayload.setTradeId(split[0]);
+            tradePayload.setValidityStatus(checkValidity(split) ? "valid" : "inValid");
+            tradePayload.setStatusReason(checkValidity(split) ? "All field present " : "Fields missing");
+            tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.FAIL));
+            tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.NOT_POSTED));
+            tradePayload.setPayload(payload);
+            Transaction transaction = session.beginTransaction();
+            session.persist(tradePayload);
+            transaction.commit();
         }
     }
 
@@ -59,18 +60,31 @@ public class TradePayloadCRUD {
         }
     }
 
-    public void updateLookUpAndJournalStatus(String tradeId) {
+    @Override
+    public void updateLookUpStatus(String tradeId) throws SQLException, FileNotFoundException {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             session.beginTransaction();
             TradePayload tradePayload = session.get(TradePayload.class, tradeId);
-            tradePayload.setLookupStatus("pass");
-            tradePayload.setJeStatus("posted");
+            tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.PASS));
             session.getTransaction().commit();
         }
     }
 
+
+    @Override
+    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
+        try (Session session = HibernateUtil.getInstance().getSession()) {
+            session.beginTransaction();
+            TradePayload tradePayload = session.get(TradePayload.class, tradeId);
+            tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
+            session.getTransaction().commit();
+        }
+    }
+
+
     //using the criteria api for returning the payloadByTradeId
-    public static String readTradePayloadByTradeId(String tradeId) {
+    @Override
+    public String readTradePayloadByTradeId(String tradeId) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<String> query = criteriaBuilder.createQuery(String.class);
@@ -80,4 +94,7 @@ public class TradePayloadCRUD {
             return session.createQuery(query).getSingleResult();
         }
     }
+
+
+
 }

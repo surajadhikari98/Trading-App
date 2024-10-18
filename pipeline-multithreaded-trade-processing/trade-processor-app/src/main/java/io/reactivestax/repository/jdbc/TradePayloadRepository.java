@@ -1,21 +1,29 @@
-package io.reactivestax.repository;
+package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.PayloadRepository;
+import io.reactivestax.utils.DBUtils;
 
+import java.io.FileNotFoundException;
 import java.sql.*;
 
 import static io.reactivestax.utils.Utility.checkValidity;
 
 
 public class TradePayloadRepository implements PayloadRepository {
-    private final Connection connection;
+    private static TradePayloadRepository instance;
 
-    public TradePayloadRepository(Connection connection) {
-        this.connection = connection;
+    private TradePayloadRepository(){}
+
+     public static TradePayloadRepository getInstance() {
+         if (instance == null) {
+             instance = new TradePayloadRepository();
+         }
+         return instance;
     }
 
     @Override
-    public void updateLookUpStatus(String tradeId) throws SQLException {
+    public void updateLookUpStatus(String tradeId) throws SQLException, FileNotFoundException {
+        Connection connection = DBUtils.getInstance().getConnection();
         String updateQuery = "UPDATE trade_payloads SET lookup_status  = ? WHERE trade_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
             stmt.setString(1, "pass");
@@ -26,7 +34,8 @@ public class TradePayloadRepository implements PayloadRepository {
     }
 
     @Override
-    public void updateJournalStatus(String tradeId) throws SQLException {
+    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
+        Connection connection = DBUtils.getInstance().getConnection();
         String updateQuery = "UPDATE trade_payloads SET je_status  = ? WHERE trade_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
             stmt.setString(1, "posted");
@@ -38,6 +47,7 @@ public class TradePayloadRepository implements PayloadRepository {
 
     @Override
     public void insertTradeIntoTradePayloadTable(String payload) throws Exception {
+        Connection connection = DBUtils.getInstance().getConnection();
         String[] split = payload.split(",");
         String insertQuery = "INSERT INTO trade_payloads (trade_id, validity_status, status_reason, lookup_status, je_status, payload) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
@@ -52,6 +62,7 @@ public class TradePayloadRepository implements PayloadRepository {
     }
 
     public Integer selectTradePayload() throws Exception {
+        Connection connection = DBUtils.getInstance().getConnection();
         String insertQuery = "SELECT count(*) FROM trade_payloads";
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             ResultSet resultSet = statement.executeQuery();

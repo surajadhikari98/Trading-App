@@ -5,10 +5,10 @@ import com.rabbitmq.client.DeliverCallback;
 import io.reactivestax.contract.TradeProcessor;
 import io.reactivestax.contract.repository.TradeProcessorRepository;
 import io.reactivestax.domain.Trade;
-import io.reactivestax.repository.CsvTradeProcessorRepository;
-import io.reactivestax.repository.hibernate.crud.JournalEntryCRUD;
-import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
-import io.reactivestax.repository.hibernate.crud.TradePositionCRUD;
+import io.reactivestax.repository.jdbc.CsvTradeProcessorRepository;
+import io.reactivestax.repository.hibernate.JournalEntryCRUD;
+import io.reactivestax.repository.hibernate.TradePayloadCRUD;
+import io.reactivestax.repository.hibernate.TradePositionCRUD;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
 

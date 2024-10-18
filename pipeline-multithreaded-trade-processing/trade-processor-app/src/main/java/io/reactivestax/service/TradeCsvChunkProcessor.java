@@ -2,8 +2,6 @@ package io.reactivestax.service;
 
 import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.infra.Infra;
-import io.reactivestax.rabbitmq.RabbitMQMessageSender;
-import io.reactivestax.repository.hibernate.crud.TradePayloadCRUD;
 import lombok.extern.slf4j.Slf4j;
 
 

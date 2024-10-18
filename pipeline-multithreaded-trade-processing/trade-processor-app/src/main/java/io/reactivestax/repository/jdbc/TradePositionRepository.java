@@ -1,4 +1,4 @@
-package io.reactivestax.repository;
+package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.domain.Trade;
