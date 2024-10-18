@@ -16,6 +16,10 @@ public class BeanFactory {
     private static final String RABBITMQ_MESSAGING_TECHNOLOGY = "rabbitmq";
     private static final String INMEMORY_MESSAGING_TECHNOLOGY = "inmemory";
 
+    private static final String HIBERNATE_PERSISTENCE_TECHNOLOGY = "hibernate";
+    private static final String JDBC_PERSISTENCE_TECHNOLOGY = "jdbc";
+
+
     public static MessageSender getQueueMessageSender() throws FileNotFoundException {
         String messagingTechnology = Infra.readFromApplicationPropertiesStringFormat("messaging.technology");
         if(RABBITMQ_MESSAGING_TECHNOLOGY.equals(messagingTechnology)){
@@ -28,11 +32,11 @@ public class BeanFactory {
     }
 
 
-    public static TradePayloadRepository getTradePayloadRepository() {
-        String messagingTechnology = Infra.readFromApplicationPropertiesStringFormat("messaging.technology");
-        if(HIBERNATE_PERSISTENCE_TECHNOLOGY.equals(applicationPropertiesUtils.getPersistenceTechnology())){
+    public static TradePayloadRepository getTradePayloadRepository() throws FileNotFoundException {
+        String messagingTechnology = Infra.readFromApplicationPropertiesStringFormat("persistence.technology");
+        if(HIBERNATE_PERSISTENCE_TECHNOLOGY.equals(messagingTechnology)){
             return HibernateTradePayloadRepository.getInstance();
-        } else if(JDBC_PERSISTENCE_TECHNOLOGY.equals(applicationPropertiesUtils.getPersistenceTechnology())){
+        } else if(JDBC_PERSISTENCE_TECHNOLOGY.equals(messagingTechnology)){
             return JDBCTradePayloadRepository.getInstance();
         } else{
             throw new InvalidPersistenceTechnologyException("Invalid persistence technology");

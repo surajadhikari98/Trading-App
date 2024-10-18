@@ -17,39 +17,39 @@ public class TradePayloadCRUD {
 
     private static TradePayloadCRUD instance;
 
-    private Session session = HibernateUtil.getInstance().getSession();
+    private TradePayloadCRUD() {
+    }
 
-    private TradePayloadCRUD(){}
-
-    public synchronized TradePayloadCRUD getInstance(){
-        if(instance == null) {
+    public static synchronized TradePayloadCRUD getInstance() {
+        if (instance == null) {
             instance = new TradePayloadCRUD();
         }
         return instance;
     }
 
 
-
     public void persistTradePayload(String payload) {
         if (payload != null) {
-            String[] split = payload.split(",");
-            TradePayload tradePayload = new TradePayload();
-            tradePayload.setTradeId(split[0]);
-            tradePayload.setValidityStatus(checkValidity(split) ? "valid" : "inValid");
-            tradePayload.setStatusReason(checkValidity(split) ? "All field present " : "Fields missing");
-            tradePayload.setLookupStatus("fail");
-            tradePayload.setJeStatus("not_posted");
-            tradePayload.setPayload(payload);
+            try (Session session = HibernateUtil.getInstance().getSession()) {
+                String[] split = payload.split(",");
+                TradePayload tradePayload = new TradePayload();
+                tradePayload.setTradeId(split[0]);
+                tradePayload.setValidityStatus(checkValidity(split) ? "valid" : "inValid");
+                tradePayload.setStatusReason(checkValidity(split) ? "All field present " : "Fields missing");
+                tradePayload.setLookupStatus("fail");
+                tradePayload.setJeStatus("not_posted");
+                tradePayload.setPayload(payload);
+                Transaction transaction = session.beginTransaction();
+                session.persist(tradePayload);
+                transaction.commit();
 
-            Transaction transaction = session.beginTransaction();
-            session.persist(tradePayload);
-            transaction.commit();
-
+            }
         }
     }
 
     //using the criteria api for returning the count
-    public  int readTradePayloadCount() {
+    public int readTradePayloadCount() {
+        try (Session session = HibernateUtil.getInstance().getSession()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Long> query = criteriaBuilder.createQuery(Long.class);
             Root<TradePayload> root = query.from(TradePayload.class);
@@ -57,8 +57,10 @@ public class TradePayloadCRUD {
             List<Long> resultList = session.createQuery(query).getResultList();
             return resultList.size();
         }
+    }
 
     public void updateLookUpAndJournalStatus(String tradeId) {
+        try (Session session = HibernateUtil.getInstance().getSession()) {
             session.beginTransaction();
             TradePayload tradePayload = session.get(TradePayload.class, tradeId);
             tradePayload.setLookupStatus("pass");

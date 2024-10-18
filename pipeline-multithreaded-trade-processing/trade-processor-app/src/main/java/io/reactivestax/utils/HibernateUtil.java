@@ -57,16 +57,16 @@ public class HibernateUtil {
 
     public Transaction startTransaction() {
 //        return getConnection().beginTransaction();
-        TransactionStatus status = getConnection().getTransaction().getStatus();
+        TransactionStatus status = getSession().getTransaction().getStatus();
         if(status !=TransactionStatus.ACTIVE){
-            return getConnection().beginTransaction();
+            return getSession().beginTransaction();
         }else{
-            return getConnection().getTransaction();
+            return getSession().getTransaction();
         }
     }
 
 
-    public Session getConnection() {
+    public Session getSession() {
         Session session = threadLocalSession.get();
         if (session == null) {
             session = buildSessionFactory().openSession();
@@ -84,17 +84,17 @@ public class HibernateUtil {
     }
 
     public void commitTransaction() {
-        getConnection().getTransaction().commit();
+        getSession().getTransaction().commit();
         closeConnection();
     }
 
     public void rollbackTransaction() {
-        getConnection().getTransaction().rollback();
+        getSession().getTransaction().rollback();
         closeConnection();
     }
 
 
-    public Session getSession() {
-        return sessionFactory.openSession();
-    }
+//    public Session getSession() {
+//        return sessionFactory.openSession();
+//    }
 }

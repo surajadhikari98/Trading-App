@@ -9,7 +9,18 @@ import org.hibernate.Transaction;
 
 public class JournalEntryCRUD {
 
-    public static void persistJournalEntry(Trade trade) {
+    private static JournalEntryCRUD instance;
+
+    private JournalEntryCRUD(){}
+
+    public static synchronized JournalEntryCRUD getInstance(){
+        if(instance == null) {
+            instance = new JournalEntryCRUD();
+        }
+        return instance;
+    }
+
+    public void persistJournalEntry(Trade trade) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             Transaction transaction = null;
             try {

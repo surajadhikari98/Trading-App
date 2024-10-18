@@ -15,7 +15,18 @@ import java.math.BigInteger;
 
 public class TradePositionCRUD {
 
-    public static void persistPosition(Trade trade) {
+    private static TradePositionCRUD instance;
+
+    private TradePositionCRUD(){}
+
+    public static synchronized TradePositionCRUD getInstance(){
+        if (instance == null) {
+            instance = new TradePositionCRUD();
+        }
+        return instance;
+    }
+
+    public  void persistPosition(Trade trade) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             Transaction transaction = null;
             try {
@@ -37,7 +48,7 @@ public class TradePositionCRUD {
         }
     }
 
-    public static void updatePosition(Trade trade, int version) {
+    public void updatePosition(Trade trade, int version) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             Transaction transaction = null;
             try {
@@ -79,7 +90,7 @@ public class TradePositionCRUD {
 
 
     //using the criteria api for returning the payloadByTradeId
-    public static synchronized Integer getCusipVersion(Trade trade) {
+    public Integer getCusipVersion(Trade trade) {
         try (Session session = HibernateUtil.getInstance().getSession()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Integer> query = criteriaBuilder.createQuery(Integer.class);
