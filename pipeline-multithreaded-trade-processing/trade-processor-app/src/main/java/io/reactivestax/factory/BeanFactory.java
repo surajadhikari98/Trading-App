@@ -1,6 +1,7 @@
 package io.reactivestax.factory;
 
 import io.reactivestax.contract.MessageSender;
+import io.reactivestax.contract.repository.PayloadRepository;
 import io.reactivestax.exception.InvalidPersistenceTechnologyException;
 import io.reactivestax.infra.Infra;
 import io.reactivestax.message.sender.InMemoryQueueMessageSender;
@@ -33,12 +34,12 @@ public class BeanFactory {
     }
 
 
-    public static TradePayloadRepository getTradePayloadRepository() throws FileNotFoundException {
+    public static PayloadRepository getTradePayloadRepository() throws FileNotFoundException {
         String messagingTechnology = Infra.readFromApplicationPropertiesStringFormat("persistence.technology");
         if(HIBERNATE_PERSISTENCE_TECHNOLOGY.equals(messagingTechnology)){
             return TradePayloadCRUD.getInstance();
         } else if(JDBC_PERSISTENCE_TECHNOLOGY.equals(messagingTechnology)){
-            return JDBCTradePayloadRepository.getInstance();
+            return TradePayloadRepository.getInstance();
         } else{
             throw new InvalidPersistenceTechnologyException("Invalid persistence technology");
         }

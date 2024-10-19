@@ -12,11 +12,14 @@ import io.reactivestax.repository.hibernate.TradePositionCRUD;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.reactivestax.factory.BeanFactory.getTradePayloadRepository;
 
 @Slf4j
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
@@ -72,8 +75,9 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 }
     }
 
-    private void processJournalWithPosition(String tradeId, TradeProcessorRepository csvTradeProcessorRepository) {
-        String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
+    private void processJournalWithPosition(String tradeId, TradeProcessorRepository csvTradeProcessorRepository) throws FileNotFoundException {
+        String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
+//        String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
         String[] payloads = payload.split(",");
         Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
         log.info("result journal{}", payload);
@@ -83,13 +87,14 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 dlQueue.put(trade.getTradeIdentifier());
                 log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
             } else {
-                JournalEntryCRUD.persistJournalEntry(trade);
+                getTradePayloadRepository().insertTradeIntoTradePayloadTable(trade);
+//                JournalEntryCRUD.persistJournalEntry(trade);
                 processPosition(trade);
             }
 
         } catch (SQLException e) {
             log.error(e.getMessage());
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             Thread.currentThread().interrupt();
             log.error(e.getMessage());
         }
