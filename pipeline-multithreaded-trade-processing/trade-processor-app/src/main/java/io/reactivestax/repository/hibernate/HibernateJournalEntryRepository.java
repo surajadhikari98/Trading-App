@@ -7,15 +7,15 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 
-public class JournalEntryCRUD {
+public class HibernateJournalEntryRepository {
 
-    private static JournalEntryCRUD instance;
+    private static HibernateJournalEntryRepository instance;
 
-    private JournalEntryCRUD(){}
+    private HibernateJournalEntryRepository(){}
 
-    public static synchronized JournalEntryCRUD getInstance(){
+    public static synchronized HibernateJournalEntryRepository getInstance(){
         if(instance == null) {
-            instance = new JournalEntryCRUD();
+            instance = new HibernateJournalEntryRepository();
         }
         return instance;
     }

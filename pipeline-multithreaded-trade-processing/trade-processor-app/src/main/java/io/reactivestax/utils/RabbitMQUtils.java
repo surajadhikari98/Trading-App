@@ -37,5 +37,4 @@ public class RabbitMQUtils {
     public Channel getChannel() throws IOException {
         return connection.createChannel();
     }
-
 }

@@ -9,11 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class TradePositionRepository implements PositionRepository {
+public class JDBCTradePositionRepository implements PositionRepository {
 
     private final Connection connection;
 
-    public TradePositionRepository(Connection connection) {
+    public JDBCTradePositionRepository(Connection connection) {
         this.connection = connection;
     }
 

@@ -1,22 +1,23 @@
 package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.PayloadRepository;
+import io.reactivestax.domain.Trade;
+import io.reactivestax.enums.StatusReasonEnum;
+import io.reactivestax.enums.ValidityStatusEnum;
 import io.reactivestax.utils.DBUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
 
-import static io.reactivestax.utils.Utility.checkValidity;
 
+public class JDBCTradePayloadRepository implements PayloadRepository {
+    private static JDBCTradePayloadRepository instance;
 
-public class TradePayloadRepository implements PayloadRepository {
-    private static TradePayloadRepository instance;
+    private JDBCTradePayloadRepository(){}
 
-    private TradePayloadRepository(){}
-
-     public static TradePayloadRepository getInstance() {
+     public static JDBCTradePayloadRepository getInstance() {
          if (instance == null) {
-             instance = new TradePayloadRepository();
+             instance = new JDBCTradePayloadRepository();
          }
          return instance;
     }
@@ -46,19 +47,23 @@ public class TradePayloadRepository implements PayloadRepository {
     }
 
     @Override
-    public void insertTradeIntoTradePayloadTable(String payload) throws Exception {
+    public void insertTradeIntoTradePayloadTable(Trade payload) throws Exception {
         Connection connection = DBUtils.getInstance().getConnection();
-        String[] split = payload.split(",");
         String insertQuery = "INSERT INTO trade_payloads (trade_id, validity_status, status_reason, lookup_status, je_status, payload) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
-            statement.setString(1, split[0]);
-            statement.setString(2, checkValidity(split) ? "valid" : "inValid");
-            statement.setString(3, checkValidity(split) ? "All field present " : "Fields missing");
+            statement.setString(1, payload.getTradeIdentifier());
+            statement.setString(2, String.valueOf(payload!= null ? ValidityStatusEnum.VALID : ValidityStatusEnum.INVALID));
+            statement.setString(3, payload!= null ? String.valueOf(StatusReasonEnum.ALL_FIELDS_PRESENT) : String.valueOf(StatusReasonEnum.FIELDS_MISSING));
             statement.setString(4, "fail");
             statement.setString(5, "not_posted");
-            statement.setString(6, payload);
+            statement.setString(6, String.valueOf(payload));
             statement.executeUpdate();
         }
+    }
+
+    @Override
+    public String readTradePayloadByTradeId(String tradeId) {
+        return "";
     }
 
     public Integer selectTradePayload() throws Exception {

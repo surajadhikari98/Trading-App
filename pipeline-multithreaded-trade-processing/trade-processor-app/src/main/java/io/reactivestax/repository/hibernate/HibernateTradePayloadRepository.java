@@ -1,9 +1,11 @@
 package io.reactivestax.repository.hibernate;
 
 import io.reactivestax.contract.repository.PayloadRepository;
+import io.reactivestax.domain.Trade;
 import io.reactivestax.entity.TradePayload;
 import io.reactivestax.enums.LookUpStatusEnum;
 import io.reactivestax.enums.PostedStatusEnum;
+import io.reactivestax.enums.ValidityStatusEnum;
 import io.reactivestax.utils.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -15,33 +17,31 @@ import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.List;
 
-import static io.reactivestax.utils.Utility.checkValidity;
 
+public class HibernateTradePayloadRepository implements PayloadRepository {
 
-public class TradePayloadCRUD implements PayloadRepository {
+    private static HibernateTradePayloadRepository instance;
 
-    private static TradePayloadCRUD instance;
+    private HibernateTradePayloadRepository() {}
 
-    private TradePayloadCRUD() {}
-
-    public static synchronized TradePayloadCRUD getInstance() {
+    public static synchronized HibernateTradePayloadRepository getInstance() {
         if (instance == null) {
-            instance = new TradePayloadCRUD();
+            instance = new HibernateTradePayloadRepository();
         }
         return instance;
     }
 
     @Override
-    public void insertTradeIntoTradePayloadTable(String payload) throws Exception {
+    public void insertTradeIntoTradePayloadTable(Trade payload) throws Exception {
         try (Session session = HibernateUtil.getInstance().getSession()) {
-            String[] split = payload.split(",");
+//            String[] split = payload.split(",");
             TradePayload tradePayload = new TradePayload();
-            tradePayload.setTradeId(split[0]);
-            tradePayload.setValidityStatus(checkValidity(split) ? "valid" : "inValid");
-            tradePayload.setStatusReason(checkValidity(split) ? "All field present " : "Fields missing");
+            tradePayload.setTradeId(payload.getTradeIdentifier());
+            tradePayload.setValidityStatus(payload != null ? String.valueOf(ValidityStatusEnum.VALID) : String.valueOf(ValidityStatusEnum.INVALID));
+            tradePayload.setStatusReason(payload != null ? "All field present " : "Fields missing");
             tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.FAIL));
             tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.NOT_POSTED));
-            tradePayload.setPayload(payload);
+            tradePayload.setPayload(String.valueOf(payload));
             Transaction transaction = session.beginTransaction();
             session.persist(tradePayload);
             transaction.commit();
@@ -80,7 +80,6 @@ public class TradePayloadCRUD implements PayloadRepository {
             session.getTransaction().commit();
         }
     }
-
 
     //using the criteria api for returning the payloadByTradeId
     @Override

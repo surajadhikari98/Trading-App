@@ -13,15 +13,15 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import java.math.BigInteger;
 
-public class TradePositionCRUD {
+public class HibernateTradePositionRepository {
 
-    private static TradePositionCRUD instance;
+    private static HibernateTradePositionRepository instance;
 
-    private TradePositionCRUD(){}
+    private HibernateTradePositionRepository(){}
 
-    public static synchronized TradePositionCRUD getInstance(){
+    public static synchronized HibernateTradePositionRepository getInstance(){
         if (instance == null) {
-            instance = new TradePositionCRUD();
+            instance = new HibernateTradePositionRepository();
         }
         return instance;
     }

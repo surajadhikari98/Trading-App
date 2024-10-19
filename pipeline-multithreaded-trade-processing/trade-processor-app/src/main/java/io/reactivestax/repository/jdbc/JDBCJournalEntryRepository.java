@@ -7,18 +7,18 @@ import io.reactivestax.utils.DBUtils;
 import java.io.FileNotFoundException;
 import java.sql.*;
 
-public class CsvTradeProcessorRepository implements TradeProcessorRepository {
+public class JDBCJournalEntryRepository implements TradeProcessorRepository {
 
 
 
-    private static CsvTradeProcessorRepository instance;
+    private static JDBCJournalEntryRepository instance;
 
-    private CsvTradeProcessorRepository() {
+    private JDBCJournalEntryRepository() {
     }
 
-    public static synchronized CsvTradeProcessorRepository getInstance(){
+    public static synchronized JDBCJournalEntryRepository getInstance(){
         if(instance == null){
-            instance = new CsvTradeProcessorRepository();
+            instance = new JDBCJournalEntryRepository();
         }
         return instance;
     }

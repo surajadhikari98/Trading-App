@@ -5,10 +5,8 @@ import com.rabbitmq.client.DeliverCallback;
 import io.reactivestax.contract.TradeProcessor;
 import io.reactivestax.contract.repository.TradeProcessorRepository;
 import io.reactivestax.domain.Trade;
-import io.reactivestax.repository.jdbc.CsvTradeProcessorRepository;
-import io.reactivestax.repository.hibernate.JournalEntryCRUD;
-import io.reactivestax.repository.hibernate.TradePayloadCRUD;
-import io.reactivestax.repository.hibernate.TradePositionCRUD;
+import io.reactivestax.repository.jdbc.JDBCJournalEntryRepository;
+import io.reactivestax.repository.hibernate.HibernateTradePositionRepository;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +41,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-        TradeProcessorRepository tradeProcessorRepository = CsvTradeProcessorRepository.getInstance();
+        TradeProcessorRepository tradeProcessorRepository = JDBCJournalEntryRepository.getInstance();
         try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
     log.info(" [*] Waiting for messages in '{}'.", queueName);
 
@@ -102,11 +100,11 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
 
     public void processPosition(Trade trade) {
-        Integer version = TradePositionCRUD.getCusipVersion(trade);
+        Integer version = HibernateTradePositionRepository.getCusipVersion(trade);
         if (version != null) {
-            TradePositionCRUD.updatePosition(trade, version);
+            HibernateTradePositionRepository.updatePosition(trade, version);
         } else {
-            TradePositionCRUD.persistPosition(trade);
+            HibernateTradePositionRepository.persistPosition(trade);
         }
     }
 
