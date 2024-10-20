@@ -21,9 +21,9 @@ public class JDBCSecuritiesReferenceRepository implements SecuritiesReferenceRep
 
     @Override
     public boolean lookupSecurities(String cusip) throws FileNotFoundException, SQLException {
+        Connection connection = DBUtils.getInstance().getConnection();
         String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
-        try (Connection connection = DBUtils.getInstance().getConnection();
-             PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);) {
+        try (PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity)) {
             lookUpStatement.setString(1, cusip);
             return lookUpStatement.executeQuery().next();
         }

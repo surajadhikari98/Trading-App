@@ -54,8 +54,8 @@ public class JDBCTradePayloadRepository implements PayloadRepository {
     @Override
     public String readTradePayloadByTradeId(String tradeId) throws FileNotFoundException, SQLException {
         String insertQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
-        try (Connection connection = DBUtils.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+        Connection connection = DBUtils.getInstance().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             statement.setString(1, tradeId);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) return resultSet.getString(1);

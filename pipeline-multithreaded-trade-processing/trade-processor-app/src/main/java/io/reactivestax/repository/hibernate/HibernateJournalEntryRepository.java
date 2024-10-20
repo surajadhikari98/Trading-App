@@ -31,20 +31,12 @@ public class HibernateJournalEntryRepository implements JournalEntryRepository {
     }
 
     @Override
-    public void saveJournalEntry(Trade trade) throws SQLException, FileNotFoundException {
-        try (Session session = HibernateUtil.getInstance().getConnection()) {
+    public void saveJournalEntry(Trade trade) {
+      Session session = HibernateUtil.getInstance().getConnection();
             Transaction transaction = null;
             try {
                 transaction = session.beginTransaction();
-                JournalEntries journalEntries = new JournalEntries();
-                journalEntries.setTradeId(trade.getTradeIdentifier());
-                journalEntries.setTradeDate(trade.getTradeDateTime());
-                journalEntries.setAccountNumber(trade.getAccountNumber());
-                journalEntries.setCusip(trade.getCusip());
-                journalEntries.setDirection(trade.getDirection());
-                journalEntries.setQuantity(trade.getQuantity());
-                journalEntries.setPrice(trade.getPrice());
-
+                JournalEntries journalEntries = getJournalEntries(trade);
                 session.persist(journalEntries);
                 transaction.commit();
             } catch (Exception e) {
@@ -53,19 +45,28 @@ public class HibernateJournalEntryRepository implements JournalEntryRepository {
                     System.out.println(e.getMessage());
                 }
             }
-        }
+    }
+
+    private static JournalEntries getJournalEntries(Trade trade) {
+        JournalEntries journalEntries = new JournalEntries();
+        journalEntries.setTradeId(trade.getTradeIdentifier());
+        journalEntries.setTradeDate(trade.getTradeDateTime());
+        journalEntries.setAccountNumber(trade.getAccountNumber());
+        journalEntries.setCusip(trade.getCusip());
+        journalEntries.setDirection(trade.getDirection());
+        journalEntries.setQuantity(trade.getQuantity());
+        journalEntries.setPrice(trade.getPrice());
+        return journalEntries;
     }
 
 
-
     @Override
-    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
-        try (Session session = HibernateUtil.getInstance().getConnection()) {
+    public void updateJournalStatus(String tradeId) {
+       Session session = HibernateUtil.getInstance().getConnection();
             session.beginTransaction();
             TradePayload tradePayload = session.get(TradePayload.class, tradeId);
             tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
             session.getTransaction().commit();
         }
-    }
 }
 

@@ -11,10 +11,12 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         //start chunkGenerator
-        new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("trade.file.path"), Infra.readFromApplicationPropertiesIntegerFormat("number.chunks"));
+        new TradeCsvChunkGenerator().
+                generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("trade.file.path"),
+                        Infra.readFromApplicationPropertiesIntegerFormat("number.chunks"));
 
         //process chunks
-        Infra.setUpQueue();
+//        Infra.setUpQueue();
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunk.processor.thread.pool.size")));
         TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool);
         tradeCsvChunkProcessor.processChunk();

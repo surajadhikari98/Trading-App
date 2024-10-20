@@ -20,6 +20,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.reactivestax.factory.BeanFactory.*;
+import static io.reactivestax.utils.Utility.prepareTrade;
 
 @Slf4j
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
@@ -43,43 +44,41 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-        JournalEntryRepository journalEntryRepository = JDBCJournalEntryRepository.getInstance();
         try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
-        log.info(" [*] Waiting for messages in '{}'.", queueName);
+            log.info(" [*] Waiting for messages in '{}'.", queueName);
 
-    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
-        try {
-            processJournalWithPosition(tradeId, journalEntryRepository);
-            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-            log.info("Position insertion successful ===========>");
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
+                try {
+                    processJournalWithPosition(tradeId);
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                    log.info("Position insertion successful ===========>");
+                } catch (Exception e) {
+                    log.error("Journal Entry and position processing failed, retrying");
+                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+                }
+            };
+            channel.basicConsume(
+                    queueName,
+                    false,          //second parameter false means auto-acknowledge is false
+                    deliverCallback,
+                    consumerTag ->
+                    {
+                    });
+            // Use a CountDownLatch to wait indefinitely
+            CountDownLatch latch = new CountDownLatch(1);
+            latch.await(); // This will block the main thread forever until countDown() is called
+
         } catch (Exception e) {
-            log.error("Journal Entry and position processing failed, retrying");
-            channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+            System.out.println(e.getMessage());
         }
-    };
-    channel.basicConsume(
-            queueName,
-            false,          //second parameter false means auto-acknowledge is false
-            deliverCallback,
-            consumerTag ->
-            {
-            });
-    // Use a CountDownLatch to wait indefinitely
-    CountDownLatch latch = new CountDownLatch(1);
-    latch.await(); // This will block the main thread forever until countDown() is called
-
-}catch (Exception e){
-    System.out.println(e.getMessage());
-}
     }
 
-    private void processJournalWithPosition(String tradeId, JournalEntryRepository csvJournalEntryRepository) throws FileNotFoundException, SQLException {
+    private void processJournalWithPosition(String tradeId) throws FileNotFoundException, SQLException {
         String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
         SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
-        String[] payloads = payload.split(",");
-        Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
+        Trade trade = prepareTrade(payload);
         log.info("result journal{}", payload);
         try {
             if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
@@ -88,7 +87,6 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
                 log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
             } else {
                 getTradePayloadRepository().insertTradeIntoTradePayloadTable(trade);
-//                JournalEntryCRUD.persistJournalEntry(trade);
                 processPosition(trade);
             }
 
@@ -99,6 +97,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
             log.error(e.getMessage());
         }
     }
+
 
 
     public void processPosition(Trade trade) throws SQLException, FileNotFoundException {

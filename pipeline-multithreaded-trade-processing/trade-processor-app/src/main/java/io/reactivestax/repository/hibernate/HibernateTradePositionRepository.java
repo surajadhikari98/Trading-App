@@ -30,7 +30,7 @@ public class HibernateTradePositionRepository implements PositionRepository {
 
     @Override
     public boolean insertPosition(Trade trade) throws SQLException {
-        try (Session session = HibernateUtil.getInstance().getConnection()) {
+        Session session = HibernateUtil.getInstance().getConnection();
             Transaction transaction = null;
             try {
                 transaction = session.beginTransaction();
@@ -47,12 +47,11 @@ public class HibernateTradePositionRepository implements PositionRepository {
                     return false;
                 }
             }
-        }
         return true;
     }
 
     public boolean updatePosition(Trade trade, int version) {
-        try (Session session = HibernateUtil.getInstance().getConnection()) {
+        Session session = HibernateUtil.getInstance().getConnection();
             Transaction transaction = null;
             try {
 
@@ -88,7 +87,6 @@ public class HibernateTradePositionRepository implements PositionRepository {
                     System.out.println(e.getMessage());
                     return false;
                 }
-            }
         }
         return true;
     }
@@ -96,7 +94,7 @@ public class HibernateTradePositionRepository implements PositionRepository {
 
     //using the criteria api for returning the payloadByTradeId
     public Integer getCusipVersion(Trade trade) {
-        try (Session session = HibernateUtil.getInstance().getConnection()) {
+        Session session = HibernateUtil.getInstance().getConnection();
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Integer> query = criteriaBuilder.createQuery(Integer.class);
             Root<Position> root = query.from(Position.class);
@@ -114,6 +112,3 @@ public class HibernateTradePositionRepository implements PositionRepository {
         }
     }
 
-
-
-}

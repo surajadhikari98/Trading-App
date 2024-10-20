@@ -29,9 +29,9 @@ public class JDBCTradePositionRepository implements PositionRepository {
 
     @Override
     public Integer getCusipVersion(Trade trade) throws SQLException, FileNotFoundException {
+        Connection connection = DBUtils.getInstance().getConnection();
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
-        try (Connection connection = DBUtils.getInstance().getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, trade.getAccountNumber());
             stmt.setString(2, trade.getCusip());
             ResultSet rs = stmt.executeQuery();
@@ -45,10 +45,9 @@ public class JDBCTradePositionRepository implements PositionRepository {
 
     @Override
     public boolean insertPosition(Trade trade) throws SQLException, FileNotFoundException {
-
+        Connection connection = DBUtils.getInstance().getConnection();
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
-        try (Connection connection = DBUtils.getInstance().getConnection();
-             PreparedStatement stmt = connection.prepareStatement(insertQuery)) {
+        try (PreparedStatement stmt = connection.prepareStatement(insertQuery)) {
             connection.setAutoCommit(false);
             stmt.setString(1, trade.getAccountNumber());
             stmt.setString(2, trade.getCusip());
@@ -65,10 +64,10 @@ public class JDBCTradePositionRepository implements PositionRepository {
     @Override
     public boolean updatePosition(Trade trade, int version) throws SQLException, FileNotFoundException {
         int rowsUpdated = 0;
+        Connection connection = DBUtils.getInstance().getConnection();
         String positionQuery = "SELECT position FROM positions where account_number = ? AND cusip = ?";
         String updateQuery = "UPDATE positions SET position = ?, version = version + 1 WHERE account_number = ? AND cusip = ? AND version = ?";
-        try (Connection connection = DBUtils.getInstance().getConnection();
-             PreparedStatement stmt = connection.prepareStatement(updateQuery);
+        try (PreparedStatement stmt = connection.prepareStatement(updateQuery);
              PreparedStatement positionStatement = connection.prepareStatement(positionQuery)) {
             connection.setAutoCommit(false);
             positionStatement.setString(1, trade.getAccountNumber());
@@ -98,9 +97,9 @@ public class JDBCTradePositionRepository implements PositionRepository {
     }
 
     public Integer getPositionCount() throws Exception {
+        Connection connection = DBUtils.getInstance().getConnection();
         String insertQuery = "SELECT count(*) FROM positions";
-        try (Connection connection = DBUtils.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getInt(1);

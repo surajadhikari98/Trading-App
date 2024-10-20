@@ -1,5 +1,6 @@
 package io.reactivestax.service;
 
+import io.reactivestax.domain.Trade;
 import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +16,7 @@ import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFor
 public class QueueDistributor {
 
     // Get the queue number, or assign one in a round-robin or random manner based on application-properties
-    public static void figureTheNextQueue(String[] trade) throws InterruptedException, IOException, TimeoutException {
+    public static void figureTheNextQueue(Trade trade) throws InterruptedException, IOException, TimeoutException {
 
         ConcurrentHashMap<String, Integer> queueDistributorMap = new ConcurrentHashMap<>();
         String distributionCriteria = readFromApplicationPropertiesStringFormat("distributionLogic.Criteria");
@@ -26,15 +27,15 @@ public class QueueDistributor {
         if (Boolean.parseBoolean(useMap)) {
             int partitionNumber = 0;
             if (Objects.equals(distributionAlgorithm, "round-robin")) {
-                partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
+                partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade.getAccountNumber() : trade.getTradeIdentifier(),
                         k -> Utility.roundRobin()); //generate 1,2,3
             } else if (Objects.equals(distributionAlgorithm, "random")) {
-                partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade[2] : trade[0],
+                partitionNumber = queueDistributorMap.computeIfAbsent(distributionCriteria.equals("accountNumber") ? trade.getAccountNumber() : trade.getTradeIdentifier(),
                         k -> Utility.random()); //generate 1,2,3
             }
             String queueName = readFromApplicationPropertiesStringFormat("queue.name") + (partitionNumber - 1);
-            getQueueMessageSender().sendMessageToQueue(queueName,trade[0]);
-            log.info("Assigned trade ID: {} to queue: {}", trade[0], partitionNumber);
+            getQueueMessageSender().sendMessageToQueue(queueName,trade.getTradeIdentifier());
+            log.info("Assigned trade ID: {} to queue: {}", trade.getTradeIdentifier(), partitionNumber);
         }
 
         if (!Boolean.parseBoolean(useMap)) {
@@ -47,8 +48,8 @@ public class QueueDistributor {
                 queueNumber = Utility.random();
             }
             String queueName = readFromApplicationPropertiesStringFormat("queue.name") + (queueNumber - 1);
-            getQueueMessageSender().sendMessageToQueue(queueName,trade[0]);
-            log.info("Assigned trade ID {} to queue {} {}", trade[0], trade[0], queueNumber);
+            getQueueMessageSender().sendMessageToQueue(queueName,trade.getTradeIdentifier());
+            log.info("Assigned trade ID {} to queue {} {}", trade.getTradeIdentifier(), trade.getTradeIdentifier(), queueNumber);
         }
     }
 }

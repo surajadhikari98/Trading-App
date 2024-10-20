@@ -1,5 +1,6 @@
 package io.reactivestax.utils;
 
+import io.reactivestax.domain.Trade;
 import io.reactivestax.infra.Infra;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,5 +22,18 @@ public class Utility {
     public static boolean checkValidity(String[] split) {
         return (split[0] != null && split[1] != null && split[2] != null && split[3] != null && split[4] != null && split[5] != null);
     }
+
+    public static Trade prepareTrade(String payload) {
+        String[] payloads = payload.split(",");
+        return new Trade(payloads[0],
+                payloads[1],
+                payloads[2],
+                payloads[3],
+                payloads[4],
+                Integer.parseInt(payloads[5]),
+                Double.parseDouble(payloads[6]),
+                Integer.parseInt(payloads[5]));
+    }
+
 
 }

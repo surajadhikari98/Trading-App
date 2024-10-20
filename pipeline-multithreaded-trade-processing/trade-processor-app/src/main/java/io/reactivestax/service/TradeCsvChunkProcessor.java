@@ -1,6 +1,9 @@
 package io.reactivestax.service;
 
 import io.reactivestax.contract.ChunkProcessor;
+import io.reactivestax.contract.repository.PayloadRepository;
+import io.reactivestax.domain.Trade;
+import io.reactivestax.factory.BeanFactory;
 import io.reactivestax.infra.Infra;
 import lombok.extern.slf4j.Slf4j;
 
@@ -8,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.util.List;
 import java.util.concurrent.*;
+
+import static io.reactivestax.utils.Utility.prepareTrade;
 
 @Slf4j
 public class TradeCsvChunkProcessor implements ChunkProcessor {
@@ -39,11 +44,13 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
 
     public void insertTradeIntoTradePayloadTable(String filePath) throws Exception {
         String line;
-            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+        PayloadRepository tradePayloadRepository = BeanFactory.getTradePayloadRepository();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
-                    String[] split = line.split(",");
-                    QueueDistributor.figureTheNextQueue(split);
+                    Trade trade = prepareTrade(line);
+                    tradePayloadRepository.insertTradeIntoTradePayloadTable(trade);
+                    QueueDistributor.figureTheNextQueue(trade);
                 }
             }
         }
