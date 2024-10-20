@@ -1,0 +1,109 @@
+package io.reactivestax.service;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DeliverCallback;
+import io.reactivestax.contract.TradeProcessor;
+import io.reactivestax.contract.repository.JournalEntryRepository;
+import io.reactivestax.contract.repository.PositionRepository;
+import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
+import io.reactivestax.domain.Trade;
+import io.reactivestax.factory.BeanFactory;
+import io.reactivestax.repository.jdbc.JDBCJournalEntryRepository;
+import io.reactivestax.repository.hibernate.HibernateTradePositionRepository;
+import io.reactivestax.utils.RabbitMQUtils;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
+import java.sql.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.reactivestax.factory.BeanFactory.*;
+import static io.reactivestax.utils.Utility.prepareTrade;
+
+@Slf4j
+public class CsvTradeProcessor implements Runnable, TradeProcessor {
+    private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
+    static AtomicInteger countSec = new AtomicInteger(0);
+    private final String queueName;
+
+    public CsvTradeProcessor(String queueName) {
+        this.queueName = queueName;
+    }
+
+
+    @Override
+    public void run() {
+        try {
+            processTrade();
+        } catch (Exception e) {
+            CsvTradeProcessor.log.info("trade processor:  {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public void processTrade() throws Exception {
+        Channel channel = RabbitMQUtils.getRabbitMQChannel();
+        log.info(" [*] Waiting for messages in '{}'.", queueName);
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
+            try {
+                processJournalWithPosition(tradeId);
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                log.info("Position insertion successful ===========>");
+            } catch (Exception e) {
+                log.error("Journal Entry and position processing failed, retrying");
+                channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+            }
+        };
+        channel.basicConsume(
+                queueName,
+                false,          //second parameter false means auto-acknowledge is false
+                deliverCallback,
+                consumerTag ->
+                {
+                });
+        // Use a CountDownLatch to wait indefinitely
+        CountDownLatch latch = new CountDownLatch(1);
+        latch.await(); // This will block the main thread forever until countDown() is called
+    }
+
+    private void processJournalWithPosition(String tradeId) throws FileNotFoundException, SQLException {
+        String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
+        SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
+        JournalEntryRepository journalEntryRepository = getJournalEntryRepository();
+        Trade trade = prepareTrade(payload);
+        log.info("result journal{}", payload);
+        try {
+            if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
+                log.warn("No security found....");
+                dlQueue.put(trade.getTradeIdentifier());
+                log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
+            } else {
+                journalEntryRepository.saveJournalEntry(trade);
+                processPosition(trade);
+            }
+
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+        } catch (Exception e) {
+            Thread.currentThread().interrupt();
+            log.error(e.getMessage());
+        }
+    }
+
+
+    public void processPosition(Trade trade) throws SQLException, FileNotFoundException {
+        PositionRepository positionsRepository = getPositionsRepository();
+        Integer version = positionsRepository.getCusipVersion(trade);
+        if (version != null) {
+            positionsRepository.updatePosition(trade, version);
+        } else {
+            positionsRepository.insertPosition(trade);
+        }
+    }
+
+}
