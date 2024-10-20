@@ -15,17 +15,16 @@ public class RabbitMQMessageSender implements MessageSender {
 
     private static RabbitMQMessageSender instance;
 
-    public synchronized static RabbitMQMessageSender getInstance(){
-        if(instance == null) {
+    public static synchronized RabbitMQMessageSender getInstance() {
+        if (instance == null) {
             instance = new RabbitMQMessageSender();
         }
-        return  instance;
+        return instance;
     }
 
     @Override
     public Boolean sendMessageToQueue(String queueName, String message) throws IOException, TimeoutException {
 
-//        String routingKey = Infra.readFromApplicationPropertiesStringFormat("rabbitMQ.queue.name") + (queueName - 1);
         RabbitMQUtils.getInstance().getChannel().basicPublish(
                 readFromApplicationPropertiesStringFormat("rabbitMQ.exchange.name"),
                 queueName,

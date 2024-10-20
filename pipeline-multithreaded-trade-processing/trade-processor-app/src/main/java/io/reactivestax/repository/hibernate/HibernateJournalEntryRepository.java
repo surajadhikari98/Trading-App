@@ -1,27 +1,38 @@
 package io.reactivestax.repository.hibernate;
 
+import io.reactivestax.contract.repository.JournalEntryRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.entity.JournalEntries;
+import io.reactivestax.entity.TradePayload;
+import io.reactivestax.enums.PostedStatusEnum;
+import io.reactivestax.utils.DBUtils;
 import io.reactivestax.utils.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.io.FileNotFoundException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
-public class HibernateJournalEntryRepository {
+
+public class HibernateJournalEntryRepository implements JournalEntryRepository {
 
     private static HibernateJournalEntryRepository instance;
 
-    private HibernateJournalEntryRepository(){}
+    private HibernateJournalEntryRepository() {
+    }
 
-    public static synchronized HibernateJournalEntryRepository getInstance(){
-        if(instance == null) {
+    public static synchronized HibernateJournalEntryRepository getInstance() {
+        if (instance == null) {
             instance = new HibernateJournalEntryRepository();
         }
         return instance;
     }
 
-    public void persistJournalEntry(Trade trade) {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+    @Override
+    public void saveJournalEntry(Trade trade) throws SQLException, FileNotFoundException {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             Transaction transaction = null;
             try {
                 transaction = session.beginTransaction();
@@ -45,5 +56,16 @@ public class HibernateJournalEntryRepository {
         }
     }
 
+
+
+    @Override
+    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
+            session.beginTransaction();
+            TradePayload tradePayload = session.get(TradePayload.class, tradeId);
+            tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
+            session.getTransaction().commit();
+        }
+    }
 }
 

@@ -1,5 +1,6 @@
 package io.reactivestax.repository.hibernate;
 
+import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.entity.Position;
 import io.reactivestax.utils.HibernateUtil;
@@ -12,8 +13,9 @@ import org.hibernate.Transaction;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import java.math.BigInteger;
+import java.sql.SQLException;
 
-public class HibernateTradePositionRepository {
+public class HibernateTradePositionRepository implements PositionRepository {
 
     private static HibernateTradePositionRepository instance;
 
@@ -26,8 +28,9 @@ public class HibernateTradePositionRepository {
         return instance;
     }
 
-    public  void persistPosition(Trade trade) {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+    @Override
+    public boolean insertPosition(Trade trade) throws SQLException {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             Transaction transaction = null;
             try {
                 transaction = session.beginTransaction();
@@ -36,20 +39,20 @@ public class HibernateTradePositionRepository {
                 position.setCusip(trade.getCusip());
                 position.setPosition(BigInteger.valueOf(trade.getQuantity()));
                 session.persist(position);
-
                 transaction.commit();
 
             } catch (Exception e) {
                 if (transaction != null) {
                     transaction.rollback();
-                    System.out.println(e.getMessage());
+                    return false;
                 }
             }
         }
+        return true;
     }
 
-    public void updatePosition(Trade trade, int version) {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+    public boolean updatePosition(Trade trade, int version) {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             Transaction transaction = null;
             try {
 
@@ -83,15 +86,17 @@ public class HibernateTradePositionRepository {
                 if (transaction != null) {
                     transaction.rollback();
                     System.out.println(e.getMessage());
+                    return false;
                 }
             }
         }
+        return true;
     }
 
 
     //using the criteria api for returning the payloadByTradeId
     public Integer getCusipVersion(Trade trade) {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Integer> query = criteriaBuilder.createQuery(Integer.class);
             Root<Position> root = query.from(Position.class);
@@ -108,6 +113,7 @@ public class HibernateTradePositionRepository {
             return session.createQuery(query).uniqueResult();
         }
     }
+
 
 
 }

@@ -3,7 +3,9 @@ package io.reactivestax.repository.jdbc;
 import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.exception.OptimisticLockingException;
+import io.reactivestax.utils.DBUtils;
 
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,17 +13,25 @@ import java.sql.SQLException;
 
 public class JDBCTradePositionRepository implements PositionRepository {
 
-    private final Connection connection;
 
-    public JDBCTradePositionRepository(Connection connection) {
-        this.connection = connection;
+    private static JDBCTradePositionRepository instance;
+
+    private JDBCTradePositionRepository() {
+    }
+
+    public static synchronized JDBCTradePositionRepository getInstance() {
+        if (instance == null) {
+            instance = new JDBCTradePositionRepository();
+        }
+        return instance;
     }
 
 
     @Override
-    public int getCusipVersion(Trade trade) throws SQLException {
+    public Integer getCusipVersion(Trade trade) throws SQLException, FileNotFoundException {
         String query = "SELECT version FROM positions WHERE account_number = ? AND cusip = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+        try (Connection connection = DBUtils.getInstance().getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, trade.getAccountNumber());
             stmt.setString(2, trade.getCusip());
             ResultSet rs = stmt.executeQuery();
@@ -34,10 +44,12 @@ public class JDBCTradePositionRepository implements PositionRepository {
     }
 
     @Override
-    public boolean insertPosition(Trade trade) throws SQLException {
-        connection.setAutoCommit(false);
+    public boolean insertPosition(Trade trade) throws SQLException, FileNotFoundException {
+
         String insertQuery = "INSERT INTO positions (account_number, cusip, position, version) VALUES (?,?, ?, 0)";
-        try (PreparedStatement stmt = connection.prepareStatement(insertQuery);) {
+        try (Connection connection = DBUtils.getInstance().getConnection();
+             PreparedStatement stmt = connection.prepareStatement(insertQuery)) {
+            connection.setAutoCommit(false);
             stmt.setString(1, trade.getAccountNumber());
             stmt.setString(2, trade.getCusip());
             stmt.setDouble(3, trade.getQuantity());
@@ -51,13 +63,14 @@ public class JDBCTradePositionRepository implements PositionRepository {
 
     // Update the position using optimistic locking
     @Override
-    public boolean updatePosition(Trade trade, int version) throws SQLException {
+    public boolean updatePosition(Trade trade, int version) throws SQLException, FileNotFoundException {
         int rowsUpdated = 0;
-        connection.setAutoCommit(false);
         String positionQuery = "SELECT position FROM positions where account_number = ? AND cusip = ?";
         String updateQuery = "UPDATE positions SET position = ?, version = version + 1 WHERE account_number = ? AND cusip = ? AND version = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(updateQuery);
-             PreparedStatement positionStatement = connection.prepareStatement(positionQuery);) {
+        try (Connection connection = DBUtils.getInstance().getConnection();
+             PreparedStatement stmt = connection.prepareStatement(updateQuery);
+             PreparedStatement positionStatement = connection.prepareStatement(positionQuery)) {
+            connection.setAutoCommit(false);
             positionStatement.setString(1, trade.getAccountNumber());
             positionStatement.setString(2, trade.getCusip());
             ResultSet resultSet = positionStatement.executeQuery();
@@ -86,7 +99,8 @@ public class JDBCTradePositionRepository implements PositionRepository {
 
     public Integer getPositionCount() throws Exception {
         String insertQuery = "SELECT count(*) FROM positions";
-        try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+        try (Connection connection = DBUtils.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getInt(1);

@@ -29,7 +29,7 @@ public class Infra {
         QUEUES_NUMBER = readFromApplicationPropertiesIntegerFormat("number.queues");
     }
 
-    public static synchronized void setUpQueue() throws IOException, TimeoutException {
+    public static void setUpQueue() throws IOException, TimeoutException {
         try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
             String exchangeName = readFromApplicationPropertiesStringFormat("rabbitMQ.exchange.name");
             Map<String, Object> args = new HashMap<>();

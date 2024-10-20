@@ -1,14 +1,13 @@
 package io.reactivestax.repository.jdbc;
 
-import io.reactivestax.contract.repository.TradeProcessorRepository;
+import io.reactivestax.contract.repository.JournalEntryRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.utils.DBUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
 
-public class JDBCJournalEntryRepository implements TradeProcessorRepository {
-
+public class JDBCJournalEntryRepository implements JournalEntryRepository {
 
 
     private static JDBCJournalEntryRepository instance;
@@ -16,8 +15,8 @@ public class JDBCJournalEntryRepository implements TradeProcessorRepository {
     private JDBCJournalEntryRepository() {
     }
 
-    public static synchronized JDBCJournalEntryRepository getInstance(){
-        if(instance == null){
+    public static synchronized JDBCJournalEntryRepository getInstance() {
+        if (instance == null) {
             instance = new JDBCJournalEntryRepository();
         }
         return instance;
@@ -41,14 +40,15 @@ public class JDBCJournalEntryRepository implements TradeProcessorRepository {
         }
     }
 
-   @Override
-    public boolean lookUpSecurityByCUSIP(String cusip) throws SQLException, FileNotFoundException {
-       Connection connection = DBUtils.getInstance().getConnection();
-        String lookupQueryForSecurity = "SELECT 1 FROM securities_reference WHERE cusip = ?";
-       assert connection != null;
-       try(PreparedStatement lookUpStatement = connection.prepareStatement(lookupQueryForSecurity);) {
-            lookUpStatement.setString(1, cusip);
-            return lookUpStatement.executeQuery().next();
+
+    @Override
+    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
+        Connection connection = DBUtils.getInstance().getConnection();
+        String updateQuery = "UPDATE trade_payloads SET je_status  = ? WHERE trade_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
+            stmt.setString(1, "posted");
+            stmt.setString(2, tradeId);
+            stmt.executeUpdate();
         }
     }
 
@@ -57,18 +57,17 @@ public class JDBCJournalEntryRepository implements TradeProcessorRepository {
         Connection connection = DBUtils.getInstance().getConnection();
         assert connection != null;
         try (CallableStatement stmt = connection.prepareCall(sql)) {
-            // Step 4: Set the input parameters
-            stmt.setString(1,trade.getTradeIdentifier());        // p_trade_id
-            stmt.setString(2, trade.getTradeDateTime());          // p_trade_date
-            stmt.setString(3, trade.getAccountNumber());    // p_account_number
-            stmt.setString(4, trade.getCusip());                // p_cusip
-            stmt.setString(5, trade.getDirection());                 // p_direction
-            stmt.setInt(6, trade.getQuantity());                      // p_quantity
-            stmt.setDouble(7, trade.getPrice());                // p_price
-            stmt.setTimestamp(8, Timestamp.valueOf(trade.getTradeDateTime())); // p_posted_date
+            stmt.setString(1, trade.getTradeIdentifier());
+            stmt.setString(2, trade.getTradeDateTime());
+            stmt.setString(3, trade.getAccountNumber());
+            stmt.setString(4, trade.getCusip());
+            stmt.setString(5, trade.getDirection());
+            stmt.setInt(6, trade.getQuantity());
+            stmt.setDouble(7, trade.getPrice());
+            stmt.setTimestamp(8, Timestamp.valueOf(trade.getTradeDateTime()));
             stmt.registerOutParameter(9, Types.VARCHAR);
             stmt.execute();
-            return  stmt.getString(9);
+            return stmt.getString(9);
         }
     }
 
@@ -78,12 +77,10 @@ public class JDBCJournalEntryRepository implements TradeProcessorRepository {
         assert connection != null;
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             ResultSet resultSet = statement.executeQuery();
-            if(resultSet.next()){
-                return  resultSet.getInt(1);
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
             return 0;
         }
     }
-
-
 }

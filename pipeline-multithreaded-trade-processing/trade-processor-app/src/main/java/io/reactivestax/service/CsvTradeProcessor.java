@@ -3,7 +3,9 @@ package io.reactivestax.service;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import io.reactivestax.contract.TradeProcessor;
-import io.reactivestax.contract.repository.TradeProcessorRepository;
+import io.reactivestax.contract.repository.JournalEntryRepository;
+import io.reactivestax.contract.repository.PositionRepository;
+import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
 import io.reactivestax.domain.Trade;
 import io.reactivestax.repository.jdbc.JDBCJournalEntryRepository;
 import io.reactivestax.repository.hibernate.HibernateTradePositionRepository;
@@ -17,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.reactivestax.factory.BeanFactory.getTradePayloadRepository;
+import static io.reactivestax.factory.BeanFactory.*;
 
 @Slf4j
 public class CsvTradeProcessor implements Runnable, TradeProcessor {
@@ -41,15 +43,15 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-        TradeProcessorRepository tradeProcessorRepository = JDBCJournalEntryRepository.getInstance();
+        JournalEntryRepository journalEntryRepository = JDBCJournalEntryRepository.getInstance();
         try (Channel channel = RabbitMQUtils.getInstance().getChannel()) {
-    log.info(" [*] Waiting for messages in '{}'.", queueName);
+        log.info(" [*] Waiting for messages in '{}'.", queueName);
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
         log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
         try {
-            processJournalWithPosition(tradeId, tradeProcessorRepository);
+            processJournalWithPosition(tradeId, journalEntryRepository);
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
             log.info("Position insertion successful ===========>");
         } catch (Exception e) {
@@ -73,14 +75,14 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
 }
     }
 
-    private void processJournalWithPosition(String tradeId, TradeProcessorRepository csvTradeProcessorRepository) throws FileNotFoundException {
+    private void processJournalWithPosition(String tradeId, JournalEntryRepository csvJournalEntryRepository) throws FileNotFoundException, SQLException {
         String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
-//        String payload = TradePayloadCRUD.readTradePayloadByTradeId(tradeId);
+        SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
         String[] payloads = payload.split(",");
         Trade trade = new Trade(payloads[0], payloads[1], payloads[2], payloads[3], payloads[4], Integer.parseInt(payloads[5]), Double.parseDouble(payloads[6]), Integer.parseInt(payloads[5]));
         log.info("result journal{}", payload);
         try {
-            if (!csvTradeProcessorRepository.lookUpSecurityByCUSIP(trade.getCusip())) {
+            if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
                 log.warn("No security found....");
                 dlQueue.put(trade.getTradeIdentifier());
                 log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
@@ -99,12 +101,13 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     }
 
 
-    public void processPosition(Trade trade) {
-        Integer version = HibernateTradePositionRepository.getCusipVersion(trade);
+    public void processPosition(Trade trade) throws SQLException, FileNotFoundException {
+        PositionRepository positionsRepository = getPositionsRepository();
+        Integer version = positionsRepository.getCusipVersion(trade);
         if (version != null) {
-            HibernateTradePositionRepository.updatePosition(trade, version);
+            positionsRepository.updatePosition(trade, version);
         } else {
-            HibernateTradePositionRepository.persistPosition(trade);
+            positionsRepository.insertPosition(trade);
         }
     }
 

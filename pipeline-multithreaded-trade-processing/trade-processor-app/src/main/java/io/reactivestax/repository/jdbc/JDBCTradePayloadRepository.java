@@ -13,13 +13,14 @@ import java.sql.*;
 public class JDBCTradePayloadRepository implements PayloadRepository {
     private static JDBCTradePayloadRepository instance;
 
-    private JDBCTradePayloadRepository(){}
+    private JDBCTradePayloadRepository() {
+    }
 
-     public static JDBCTradePayloadRepository getInstance() {
-         if (instance == null) {
-             instance = new JDBCTradePayloadRepository();
-         }
-         return instance;
+    public static JDBCTradePayloadRepository getInstance() {
+        if (instance == null) {
+            instance = new JDBCTradePayloadRepository();
+        }
+        return instance;
     }
 
     @Override
@@ -34,17 +35,6 @@ public class JDBCTradePayloadRepository implements PayloadRepository {
         }
     }
 
-    @Override
-    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
-        Connection connection = DBUtils.getInstance().getConnection();
-        String updateQuery = "UPDATE trade_payloads SET je_status  = ? WHERE trade_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
-            stmt.setString(1, "posted");
-            stmt.setString(2, tradeId);
-            stmt.executeUpdate();
-            System.out.println("Journal Status updated suceesfully for: " + tradeId);
-        }
-    }
 
     @Override
     public void insertTradeIntoTradePayloadTable(Trade payload) throws Exception {
@@ -52,8 +42,8 @@ public class JDBCTradePayloadRepository implements PayloadRepository {
         String insertQuery = "INSERT INTO trade_payloads (trade_id, validity_status, status_reason, lookup_status, je_status, payload) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             statement.setString(1, payload.getTradeIdentifier());
-            statement.setString(2, String.valueOf(payload!= null ? ValidityStatusEnum.VALID : ValidityStatusEnum.INVALID));
-            statement.setString(3, payload!= null ? String.valueOf(StatusReasonEnum.ALL_FIELDS_PRESENT) : String.valueOf(StatusReasonEnum.FIELDS_MISSING));
+            statement.setString(2, String.valueOf(payload != null ? ValidityStatusEnum.VALID : ValidityStatusEnum.INVALID));
+            statement.setString(3, payload != null ? String.valueOf(StatusReasonEnum.ALL_FIELDS_PRESENT) : String.valueOf(StatusReasonEnum.FIELDS_MISSING));
             statement.setString(4, "fail");
             statement.setString(5, "not_posted");
             statement.setString(6, String.valueOf(payload));
@@ -62,7 +52,14 @@ public class JDBCTradePayloadRepository implements PayloadRepository {
     }
 
     @Override
-    public String readTradePayloadByTradeId(String tradeId) {
+    public String readTradePayloadByTradeId(String tradeId) throws FileNotFoundException, SQLException {
+        String insertQuery = "SELECT payload FROM trade_payloads WHERE trade_id = ?";
+        try (Connection connection = DBUtils.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+            statement.setString(1, tradeId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getString(1);
+        }
         return "";
     }
 
@@ -71,8 +68,8 @@ public class JDBCTradePayloadRepository implements PayloadRepository {
         String insertQuery = "SELECT count(*) FROM trade_payloads";
         try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
             ResultSet resultSet = statement.executeQuery();
-            if(resultSet.next()){
-                return  resultSet.getInt(1);
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
             return 0;
         }

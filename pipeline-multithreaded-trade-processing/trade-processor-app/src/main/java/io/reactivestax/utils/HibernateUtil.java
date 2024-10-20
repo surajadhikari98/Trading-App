@@ -1,5 +1,7 @@
 package io.reactivestax.utils;
 
+import io.reactivestax.contract.repository.ConnectionUtil;
+import io.reactivestax.contract.repository.TransactionUtil;
 import io.reactivestax.entity.JournalEntries;
 import io.reactivestax.entity.Position;
 import io.reactivestax.entity.TradePayload;
@@ -16,14 +18,15 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 @Getter
 @Slf4j
-public class HibernateUtil {
+public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
     private static volatile HibernateUtil instance;
     private static final ThreadLocal<Session> threadLocalSession = new ThreadLocal<>();
 
     private static SessionFactory sessionFactory;
     private static final String DEFAULT_RESOURCE = "hibernate.cfg.xml";
 
-    private HibernateUtil() {}
+    private HibernateUtil() {
+    }
 
 
     private static synchronized SessionFactory buildSessionFactory() {
@@ -55,18 +58,12 @@ public class HibernateUtil {
         return instance;
     }
 
-    public Transaction startTransaction() {
-//        return getConnection().beginTransaction();
-        TransactionStatus status = getSession().getTransaction().getStatus();
-        if(status !=TransactionStatus.ACTIVE){
-            return getSession().beginTransaction();
-        }else{
-            return getSession().getTransaction();
-        }
+    public void startTransaction() {
+        getConnection().beginTransaction();
     }
 
-
-    public Session getSession() {
+    @Override
+    public Session getConnection() {
         Session session = threadLocalSession.get();
         if (session == null) {
             session = buildSessionFactory().openSession();
@@ -75,7 +72,7 @@ public class HibernateUtil {
         return session;
     }
 
-    private void closeConnection(){
+    private void closeConnection() {
         Session session = threadLocalSession.get();
         if (session != null) {
             session.close();
@@ -84,17 +81,13 @@ public class HibernateUtil {
     }
 
     public void commitTransaction() {
-        getSession().getTransaction().commit();
+        getConnection().getTransaction().commit();
         closeConnection();
     }
 
     public void rollbackTransaction() {
-        getSession().getTransaction().rollback();
+        getConnection().getTransaction().rollback();
         closeConnection();
     }
 
-
-//    public Session getSession() {
-//        return sessionFactory.openSession();
-//    }
 }

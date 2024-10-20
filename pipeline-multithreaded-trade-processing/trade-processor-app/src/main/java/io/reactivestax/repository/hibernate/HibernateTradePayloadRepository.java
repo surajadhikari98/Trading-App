@@ -33,7 +33,7 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
 
     @Override
     public void insertTradeIntoTradePayloadTable(Trade payload) throws Exception {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
 //            String[] split = payload.split(",");
             TradePayload tradePayload = new TradePayload();
             tradePayload.setTradeId(payload.getTradeIdentifier());
@@ -50,7 +50,7 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
 
     //using the criteria api for returning the count
     public int readTradePayloadCount() {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Long> query = criteriaBuilder.createQuery(Long.class);
             Root<TradePayload> root = query.from(TradePayload.class);
@@ -62,7 +62,7 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
 
     @Override
     public void updateLookUpStatus(String tradeId) throws SQLException, FileNotFoundException {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             session.beginTransaction();
             TradePayload tradePayload = session.get(TradePayload.class, tradeId);
             tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.PASS));
@@ -71,20 +71,12 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
     }
 
 
-    @Override
-    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
-            session.beginTransaction();
-            TradePayload tradePayload = session.get(TradePayload.class, tradeId);
-            tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
-            session.getTransaction().commit();
-        }
-    }
+
 
     //using the criteria api for returning the payloadByTradeId
     @Override
     public String readTradePayloadByTradeId(String tradeId) {
-        try (Session session = HibernateUtil.getInstance().getSession()) {
+        try (Session session = HibernateUtil.getInstance().getConnection()) {
             final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<String> query = criteriaBuilder.createQuery(String.class);
             Root<TradePayload> root = query.from(TradePayload.class);

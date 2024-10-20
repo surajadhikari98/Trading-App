@@ -5,10 +5,10 @@ import io.reactivestax.domain.Trade;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 
-public interface TradeProcessorRepository {
+public interface JournalEntryRepository {
 
     void saveJournalEntry(Trade trade) throws SQLException, FileNotFoundException;
 
-    boolean lookUpSecurityByCUSIP(String cusip) throws SQLException, FileNotFoundException;
+    void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException;
 
 }

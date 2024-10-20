@@ -8,9 +8,8 @@ import java.sql.SQLException;
 public interface PayloadRepository {
     void updateLookUpStatus(String tradeId) throws SQLException, FileNotFoundException;
 
-    void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException;
 
     void insertTradeIntoTradePayloadTable(Trade payload) throws Exception;
 
-     String readTradePayloadByTradeId(String tradeId);
+     String readTradePayloadByTradeId(String tradeId) throws FileNotFoundException, SQLException;
 }

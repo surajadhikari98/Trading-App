@@ -43,7 +43,6 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 reader.readLine();
                 while ((line = reader.readLine()) != null) {
                     String[] split = line.split(",");
-//                    TradePayloadCRUD.persistTradePayload(line);
                     QueueDistributor.figureTheNextQueue(split);
                 }
             }
