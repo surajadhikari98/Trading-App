@@ -50,14 +50,18 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String tradeId = new String(delivery.getBody(), StandardCharsets.UTF_8);
             log.info(" [x] Received '{}' with routing key '{}'", tradeId, delivery.getEnvelope().getRoutingKey());
+//            try {
             try {
                 processJournalWithPosition(tradeId);
-                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                log.info("Position insertion successful ===========>");
-            } catch (Exception e) {
-                log.error("Journal Entry and position processing failed, retrying");
-                channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                log.info("Position insertion successful ===========>");
+//            } catch (Exception e) {
+//                log.error("Journal Entry and position processing failed, retrying");
+//                channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+//            }
         };
         channel.basicConsume(
                 queueName,

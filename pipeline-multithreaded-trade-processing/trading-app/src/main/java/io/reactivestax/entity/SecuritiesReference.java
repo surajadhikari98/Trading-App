@@ -1,15 +1,11 @@
 package io.reactivestax.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import lombok.Data;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
 
 @Data
 @Entity
+@Table(name = "securities_reference")
 public class SecuritiesReference {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

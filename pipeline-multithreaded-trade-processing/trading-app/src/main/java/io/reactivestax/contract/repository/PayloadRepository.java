@@ -9,7 +9,7 @@ public interface PayloadRepository {
     void updateLookUpStatus(String tradeId) throws SQLException, FileNotFoundException;
 
 
-    void insertTradeIntoTradePayloadTable(Trade payload) throws Exception;
+    void insertTradeIntoTradePayloadTable(String payload) throws Exception;
 
      String readTradePayloadByTradeId(String tradeId) throws FileNotFoundException, SQLException;
 }

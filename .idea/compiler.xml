@@ -7,11 +7,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="trade-processor-app" />
+        <module name="trading-app" />
         <module name="trade-analytics-app" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="trade-processor-app" target="17" />
       <module name="trade-processor-app (1)" target="17" />
     </bytecodeTargetLevel>
   </component>

@@ -30,39 +30,24 @@ public class Infra {
         QUEUES_NUMBER = readFromApplicationPropertiesIntegerFormat("number.queues");
     }
 
-    public static void setUpQueue() throws IOException, TimeoutException {
-        Channel channel = RabbitMQUtils.getRabbitMQChannel();
-        String exchangeName = readFromApplicationPropertiesStringFormat("queue.exchange.name");
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-dead-letter-exchange", exchangeName);
-        args.put("x-dead-letter-routing-key", "dead");
-        args.put("x-queue-type", "quorum");
-        args.put("x-delivery-limit", readFromApplicationPropertiesStringFormat("max.retry.count"));
-
-        System.out.println("RabbitMQ exchange created " + exchangeName);
-        for (int i = 0; i < readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
-            String queueName = readFromApplicationPropertiesStringFormat("queue.name") + i;
-            channel.queueDeclare(queueName, true, false, false, args);
-            channel.queueBind(queueName, exchangeName, queueName);
-            System.out.println("Queue created for = " + queueName);
-        }
-
-    }
-
-
-//    public static String readFromApplicationPropertiesStringFormat(String propertyName) throws FileNotFoundException {
-//        Properties properties = new Properties();
-//        String propName = "";
-//        String filePath = "C:\\Users\\Suraj.Adhikari\\sources\\student-mode-programs\\suad-bootcamp-2024\\pipeline-multithreaded-trade-processing\\trade-processor-app\\src\\main\\resources\\application.properties";
-////        String filePath = "C:\\Users\\Suraj.Adhikari\\sources\\student-mode-programs\\suad-bootcamp-2024\\pipeline-multithreaded-trade-processing\\trade-processor-app\\src\\main\\resources\\application.properties";
-//        try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
-//            properties.load(fileInputStream);
-//            return properties.getProperty(propertyName);
-//        } catch (IOException e) {
-//            System.out.println("application-reading" + e.getMessage());
+//    public static void setUpQueue() throws IOException, TimeoutException {
+//        Channel channel = RabbitMQUtils.getRabbitMQChannel();
+//        String exchangeName = readFromApplicationPropertiesStringFormat("queue.exchange.name");
+//        Map<String, Object> args = new HashMap<>();
+//        args.put("x-dead-letter-exchange", exchangeName);
+//        args.put("x-dead-letter-routing-key", "dead");
+//        args.put("x-queue-type", "quorum");
+//        args.put("x-delivery-limit", readFromApplicationPropertiesStringFormat("max.retry.count"));
+//
+//        System.out.println("RabbitMQ exchange created " + exchangeName);
+//        for (int i = 0; i < readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
+//            String queueName = readFromApplicationPropertiesStringFormat("queue.name") + i;
+//            channel.queueDeclare(queueName, true, false, false, args);
+//            channel.queueBind(queueName, exchangeName, queueName);
+//            System.out.println("Queue created for = " + queueName);
 //        }
-//        return propName;
 //    }
+
 
 
     public static String readFromApplicationPropertiesStringFormat(String propertyName) throws FileNotFoundException {

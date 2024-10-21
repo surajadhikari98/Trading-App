@@ -4,6 +4,7 @@ import io.reactivestax.contract.repository.ConnectionUtil;
 import io.reactivestax.contract.repository.TransactionUtil;
 import io.reactivestax.entity.JournalEntries;
 import io.reactivestax.entity.Position;
+import io.reactivestax.entity.SecuritiesReference;
 import io.reactivestax.entity.TradePayload;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,8 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
                         .configure(HibernateUtil.DEFAULT_RESOURCE)
                         .addAnnotatedClass(TradePayload.class)
                         .addAnnotatedClass(Position.class)
-                        .addAnnotatedClass(JournalEntries.class);
+                        .addAnnotatedClass(JournalEntries.class)
+                        .addAnnotatedClass(SecuritiesReference.class);
 
                 StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
                         .applySettings(configuration.getProperties())

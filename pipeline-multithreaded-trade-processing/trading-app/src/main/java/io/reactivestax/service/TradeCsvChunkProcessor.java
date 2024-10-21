@@ -52,7 +52,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                 while ((line = reader.readLine()) != null) {
                     Trade trade = prepareTrade(line);
                     transactionUtil.startTransaction();
-                    tradePayloadRepository.insertTradeIntoTradePayloadTable(trade);
+                    tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
                     transactionUtil.commitTransaction();
                     QueueDistributor.figureTheNextQueue(trade);
                 }

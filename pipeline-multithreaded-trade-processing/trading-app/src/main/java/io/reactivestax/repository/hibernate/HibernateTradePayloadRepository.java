@@ -14,6 +14,8 @@ import org.hibernate.Session;
 
 import java.util.List;
 
+import static io.reactivestax.utils.Utility.prepareTrade;
+
 
 public class HibernateTradePayloadRepository implements PayloadRepository {
 
@@ -30,15 +32,16 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
     }
 
     @Override
-    public void insertTradeIntoTradePayloadTable(Trade payload) throws Exception {
+    public void insertTradeIntoTradePayloadTable(String payload) throws Exception {
         Session session = HibernateUtil.getInstance().getConnection();
+        Trade trade = prepareTrade(payload);
         TradePayload tradePayload = new TradePayload();
-        tradePayload.setTradeId(payload.getTradeIdentifier());
+        tradePayload.setTradeId(trade.getTradeIdentifier());
         tradePayload.setValidityStatus(payload != null ? String.valueOf(ValidityStatusEnum.VALID) : String.valueOf(ValidityStatusEnum.INVALID));
         tradePayload.setStatusReason(payload != null ? "All field present " : "Fields missing");
         tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.FAIL));
         tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.NOT_POSTED));
-        tradePayload.setPayload(String.valueOf(payload));
+        tradePayload.setPayload(payload);
         session.persist(tradePayload);
     }
 
@@ -72,8 +75,12 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
         CriteriaQuery<String> query = criteriaBuilder.createQuery(String.class);
         Root<TradePayload> root = query.from(TradePayload.class);
         query.select(root.get("payload"));
-        query.where(criteriaBuilder.equal(root.get("tradeId"), tradeId)); //the field has to match the entity name not the db name
-        return session.createQuery(query).getSingleResult();
+        query.where(criteriaBuilder.equal(root.get("tradeId"), tradeId));
+
+        // Limit the result to only 1 record
+        return session.createQuery(query)
+                .setMaxResults(1)
+                .getSingleResult();
     }
 
 
