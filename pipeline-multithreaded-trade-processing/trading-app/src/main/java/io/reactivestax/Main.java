@@ -23,6 +23,7 @@ public class Main {
 
         if (appMode.equalsIgnoreCase(String.valueOf(AppModeEnum.PRODUCER))) {
             startProducer();
+//            startConsumer();
         } else if (appMode.equalsIgnoreCase(String.valueOf(AppModeEnum.CONSUMER))) {
             startConsumer();
         } else {

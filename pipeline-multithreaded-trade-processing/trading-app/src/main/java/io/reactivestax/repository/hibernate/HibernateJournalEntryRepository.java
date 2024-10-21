@@ -5,16 +5,9 @@ import io.reactivestax.domain.Trade;
 import io.reactivestax.entity.JournalEntries;
 import io.reactivestax.entity.TradePayload;
 import io.reactivestax.enums.PostedStatusEnum;
-import io.reactivestax.utils.DBUtils;
 import io.reactivestax.utils.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import java.io.FileNotFoundException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 
 public class HibernateJournalEntryRepository implements JournalEntryRepository {
 

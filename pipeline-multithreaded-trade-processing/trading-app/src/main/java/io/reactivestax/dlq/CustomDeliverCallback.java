@@ -10,6 +10,7 @@ import io.reactivestax.domain.Trade;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
@@ -36,27 +37,29 @@ public class CustomDeliverCallback implements DeliverCallback {
     }
 
     @Override
-    public void handle(String consumerTag, com.rabbitmq.client.Delivery delivery) {
+    public void handle(String consumerTag, com.rabbitmq.client.Delivery delivery) throws IOException {
         String message = null;
         try {
             message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             System.out.println(" [x] Received: '" + message + "'");
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
 
             // Simulate processing of the message
 
-            processJournalWithPosition(message);
-
-            System.out.println(" [x] Processing message: " + message);
-
             // Simulate failure for certain messages
-            if (message.contains("fail")) {
-                throw new Exception("Simulated processing failure");
-            }
 
-            // Acknowledge successful processing
-            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-            int currentCount = messageCounter.incrementAndGet();
-            System.out.println(" [x] Total messages consumed: " + currentCount);
+            if (checkRetryError()) {
+                System.out.println("$$$$ =>>>>> Retry count ====>>> ");
+                throw new Exception("Simulated processing failure");
+            } else {
+
+                processJournalWithPosition(message);
+                System.out.println(" [x] Processing message: " + message);
+
+                // Acknowledge successful processing
+                int currentCount = messageCounter.incrementAndGet();
+                System.out.println(" [x] Total messages consumed: " + currentCount);
+            }
 
         } catch (Exception e) {
             // Check the number of retries from the headers
@@ -70,13 +73,14 @@ public class CustomDeliverCallback implements DeliverCallback {
                 System.out.println(" [x] Max retries reached: " + retries + ". Discarding message: " + message);
                 try {
                     // Acknowledge to discard message
-                    //channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+                    //Max count reached so it will go to the DLQueue........
+//                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+                    channel.basicPublish(DLX_EXCHANGE, "dlx_routing_key", null, delivery.getBody());
                     //NOTE: In REAL-WORLD, you will log it to failed-trades.txt file
                     // and then email it to the trading-admin at the EOD
                     // for manual intervention
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error(e.getMessage());
                 }
             } else {
                 // Retry message
@@ -84,19 +88,16 @@ public class CustomDeliverCallback implements DeliverCallback {
                         .headers(Map.of("x-retries", retries + 1)) // Increment retry count
                         .build();
 
-                try {
                     // Re-publish to DLX (will be re-queued back to the main queue after TTL)
                     channel.basicPublish(DLX_EXCHANGE, "dlx_routing_key", retryProps, delivery.getBody());
 
                     // Reject message (will go to DLX)
-                    //channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+//                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
                     System.out.println(" [x] Retrying message: " + message + ", Retry #" + (retries + 1));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
                 }
+//            channel.basicReject(delivery.getEnvelope().getDeliveryTag(), false); // false means the message won't be requed
             }
         }
-    }
 
     private void processJournalWithPosition(String tradeId) throws FileNotFoundException, SQLException {
         String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
@@ -131,5 +132,9 @@ public class CustomDeliverCallback implements DeliverCallback {
         } else {
             positionsRepository.insertPosition(trade);
         }
+    }
+
+    private boolean checkRetryError(){
+        return Math.random() > 0.9;
     }
 }

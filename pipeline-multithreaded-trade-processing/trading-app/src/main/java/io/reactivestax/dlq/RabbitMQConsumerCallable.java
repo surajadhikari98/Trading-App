@@ -63,7 +63,7 @@ public class RabbitMQConsumerCallable implements Callable<Void> {
             Map<String, Object> dlqArguments = new HashMap<>();
             dlqArguments.put("x-message-ttl", 5000); // Retry delay in milliseconds (5 seconds)
             dlqArguments.put("x-dead-letter-exchange", MAIN_EXCHANGE); // Requeue to main exchange
-            dlqArguments.put("x-dead-letter-routing-key", "main_routing_key"); // Requeue to the main queue
+            dlqArguments.put("x-dead-letter-routing-key", queueName); // Requeue to the main queue, here the main key routing key is queueName.
 
             // Declare DLQ with TTL
             channel.queueDeclare(DLX_QUEUE, true, false, false, dlqArguments);
@@ -75,7 +75,9 @@ public class RabbitMQConsumerCallable implements Callable<Void> {
             mainQueueArguments.put("x-dead-letter-exchange", DLX_EXCHANGE); // If a message is rejected, send to DLX
             mainQueueArguments.put("x-dead-letter-routing-key", "dlx_routing_key");
 
-            channel.queueDeclare(queueName, true, false, false, mainQueueArguments);
+            channel.queueDeclare(queueName, true, false, false, mainQueueArguments); //Declaring the main queue with the argument
+
+            //queues has to be bound to the exchange.And only queues that is bound to the exchange will receive the message
             channel.queueBind(queueName, MAIN_EXCHANGE, queueName);
 
             System.out.println(" [*] Waiting for messages in '" + queueName + "'.");
@@ -103,41 +105,6 @@ public class RabbitMQConsumerCallable implements Callable<Void> {
             System.out.println("Consumer interrupted, shutting down...");
         }
         return null;
-    }
-
-    private void processJournalWithPosition(String tradeId) throws FileNotFoundException, SQLException {
-        String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
-        SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
-        JournalEntryRepository journalEntryRepository = getJournalEntryRepository();
-        Trade trade = prepareTrade(payload);
-        log.info("result journal{}", payload);
-        try {
-            if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
-                log.warn("No security found....");
-//                dlQueue.put(trade.getTradeIdentifier());
-//                log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
-            } else {
-                journalEntryRepository.saveJournalEntry(trade);
-                processPosition(trade);
-            }
-
-        } catch (SQLException e) {
-            log.error(e.getMessage());
-        } catch (Exception e) {
-            Thread.currentThread().interrupt();
-            log.error(e.getMessage());
-        }
-    }
-
-
-    public void processPosition(Trade trade) throws SQLException, FileNotFoundException {
-        PositionRepository positionsRepository = getPositionsRepository();
-        Integer version = positionsRepository.getCusipVersion(trade);
-        if (version != null) {
-            positionsRepository.updatePosition(trade, version);
-        } else {
-            positionsRepository.insertPosition(trade);
-        }
     }
 }
 
