@@ -3,7 +3,7 @@ package io.reactivestax.service;
 import io.reactivestax.contract.ChunkProcessor;
 import io.reactivestax.contract.repository.PayloadRepository;
 import io.reactivestax.contract.repository.TransactionUtil;
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.factory.BeanFactory;
 import io.reactivestax.infra.Infra;
 import lombok.extern.slf4j.Slf4j;

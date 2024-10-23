@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.util.Date;
 
 @Entity
-@Table(name = "positions")
+@Table(name = "positions",uniqueConstraints = @UniqueConstraint(columnNames = {"account_number", "cusip"}))
 @Data
 public class Position {
 
@@ -17,7 +17,6 @@ public class Position {
     @Column(name = "position_id")
     @GeneratedValue(strategy =  GenerationType.IDENTITY)
     private int positionId;
-
 
     @Column(name = "account_number")
     private String accountNumber;
@@ -38,4 +37,12 @@ public class Position {
     @Column(name = "created_date_time")
     @CreationTimestamp
     private Date createdDateTime;
+
+
+    @PrePersist
+    public void prePersist() {
+        if (this.version == null) {
+            this.version = 0;  // Set default if not already set
+        }
+    }
 }

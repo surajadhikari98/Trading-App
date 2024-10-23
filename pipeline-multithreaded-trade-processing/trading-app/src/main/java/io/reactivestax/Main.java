@@ -1,9 +1,10 @@
 package io.reactivestax;
 
-import io.reactivestax.dlq.RabbitMQConsumerApp;
+import io.reactivestax.service.ConsumerSubmitter;
+import io.reactivestax.service.dlq.RabbitMQConsumerApp;
 import io.reactivestax.enums.AppModeEnum;
-import io.reactivestax.service.TradeCsvChunkGenerator;
-import io.reactivestax.service.TradeCsvChunkProcessor;
+import io.reactivestax.service.ChunkGeneratorService;
+import io.reactivestax.service.ChunkProcessorService;
 import io.reactivestax.infra.Infra;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,14 +35,14 @@ public class Main {
     private static void startProducer() throws Exception {
         log.info("Starting in Producer Mode...");
 
-        new TradeCsvChunkGenerator().
+        new ChunkGeneratorService().
                 generateAndSubmitChunks(readFromApplicationPropertiesStringFormat("trade.file.path"),
                         Infra.readFromApplicationPropertiesIntegerFormat("number.chunks"));
 
         //process chunks
         ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(readFromApplicationPropertiesStringFormat("chunk.processor.thread.pool.size")));
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool);
-        tradeCsvChunkProcessor.processChunk();
+        ChunkProcessorService chunkProcessorService = new ChunkProcessorService(chunkProcessorThreadPool);
+        chunkProcessorService.processChunk();
 
     }
 
@@ -49,8 +50,9 @@ public class Main {
         log.info("Starting in Consumer Mode...");
         //process trades
         ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(readFromApplicationPropertiesStringFormat("tradeProcessorThreadPoolSize")));
-        RabbitMQConsumerApp.startConsumer(executorService, readFromApplicationPropertiesStringFormat("queue.name") + 0);
-
+        for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
+            ConsumerSubmitter.startConsumer(executorService, readFromApplicationPropertiesStringFormat("queue.name") + i);
+        }
     }
 
 }

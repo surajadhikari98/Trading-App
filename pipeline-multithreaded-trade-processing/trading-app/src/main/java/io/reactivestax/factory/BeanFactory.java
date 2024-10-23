@@ -1,10 +1,12 @@
 package io.reactivestax.factory;
 
 import io.reactivestax.contract.MessageSender;
+import io.reactivestax.contract.QueueSetup;
 import io.reactivestax.contract.repository.*;
 import io.reactivestax.exception.InvalidPersistenceTechnologyException;
 import io.reactivestax.message.sender.InMemoryQueueMessageSender;
 import io.reactivestax.message.sender.RabbitMQMessageSender;
+import io.reactivestax.message.sender.RabbitMQSetup;
 import io.reactivestax.repository.hibernate.HibernateJournalEntryRepository;
 import io.reactivestax.repository.hibernate.HibernateSecuritiesReferenceRepository;
 import io.reactivestax.repository.hibernate.HibernateTradePositionRepository;
@@ -54,6 +56,18 @@ public class BeanFactory {
             throw new InvalidPersistenceTechnologyException("Invalid messaging technology");
         }
     }
+
+    public static QueueSetup getQueueSetUp() throws FileNotFoundException {
+        String messagingTechnology = readFromApplicationPropertiesStringFormat("messaging.technology");
+        if(RABBITMQ_MESSAGING_TECHNOLOGY.equals(messagingTechnology)){
+            return RabbitMQSetup.getInstance();
+        } else if(IN_MEMORY_MESSAGING_TECHNOLOGY.equals(messagingTechnology)){
+            return null;
+        } else{
+            throw new InvalidPersistenceTechnologyException("Invalid messaging technology");
+        }
+    }
+
 
 
     public static PayloadRepository getTradePayloadRepository() throws FileNotFoundException {

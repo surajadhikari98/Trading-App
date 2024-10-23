@@ -1,4 +1,4 @@
-package io.reactivestax.dlq;
+package io.reactivestax.service.dlq;
 
 import com.rabbitmq.client.CancelCallback;
 

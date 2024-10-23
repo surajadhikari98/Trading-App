@@ -1,7 +1,7 @@
 package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.PayloadRepository;
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.enums.StatusReasonEnum;
 import io.reactivestax.enums.ValidityStatusEnum;
 import io.reactivestax.utils.DBUtils;

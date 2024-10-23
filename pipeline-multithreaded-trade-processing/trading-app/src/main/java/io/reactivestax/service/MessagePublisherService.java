@@ -1,6 +1,6 @@
 package io.reactivestax.service;
 
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 

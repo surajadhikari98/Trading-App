@@ -1,6 +1,6 @@
 package io.reactivestax;
 
-import io.reactivestax.service.TradeCsvChunkGenerator;
+import io.reactivestax.service.ChunkGeneratorService;
 import io.reactivestax.infra.Infra;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ public class ChunkGeneratorTest {
     public void testGenerateAndSubmitChunks() throws FileNotFoundException {
        String filePath =  Infra.readFromApplicationPropertiesStringFormat("trade.file.path");
        int numberOfChunks = Infra.readFromApplicationPropertiesIntegerFormat("number.chunks");
-      Integer fileCount = new TradeCsvChunkGenerator().generateAndSubmitChunks(filePath, numberOfChunks);
+      Integer fileCount = new ChunkGeneratorService().generateAndSubmitChunks(filePath, numberOfChunks);
       assertEquals(Optional.ofNullable(fileCount), Optional.of(numberOfChunks));
    }
 }

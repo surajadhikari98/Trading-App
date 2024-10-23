@@ -1,7 +1,7 @@
 package io.reactivestax.repository.hibernate;
 
 import io.reactivestax.contract.repository.PositionRepository;
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.entity.Position;
 import io.reactivestax.utils.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -38,6 +38,7 @@ public class HibernateTradePositionRepository implements PositionRepository {
                 position.setAccountNumber(trade.getAccountNumber());
                 position.setCusip(trade.getCusip());
                 position.setPosition(BigInteger.valueOf(trade.getQuantity()));
+                position.setDirection(trade.getDirection());
                 session.persist(position);
                 transaction.commit();
 
@@ -50,7 +51,7 @@ public class HibernateTradePositionRepository implements PositionRepository {
         return true;
     }
 
-    public boolean updatePosition(Trade trade, int version) {
+    public boolean updatePosition(Trade trade, int version) throws Exception {
         Session session = HibernateUtil.getInstance().getConnection();
             Transaction transaction = null;
             try {
@@ -82,11 +83,14 @@ public class HibernateTradePositionRepository implements PositionRepository {
                 transaction.commit();
 
             } catch (Exception e) {
-                if (transaction != null) {
-                    transaction.rollback();
-                    System.out.println(e.getMessage());
-                    return false;
-                }
+                throw new Exception(e);
+//                if (transaction != null) {
+//                    transaction.rollback();
+//                    System.out.println(e.getMessage());
+////                    throw new Exception(e);
+//                    return false;
+//                }
+
         }
         return true;
     }

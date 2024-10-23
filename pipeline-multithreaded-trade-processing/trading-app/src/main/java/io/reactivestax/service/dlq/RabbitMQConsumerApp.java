@@ -1,10 +1,14 @@
-package io.reactivestax.dlq;
+package io.reactivestax.service.dlq;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+@Slf4j
 public class RabbitMQConsumerApp {
+
+    private RabbitMQConsumerApp() {}
 
     public static void startConsumer(ExecutorService executorService, String queueName) {
         // Create an ExecutorService with a single thread
@@ -19,24 +23,24 @@ public class RabbitMQConsumerApp {
         try {
             consumerFuture.get(); // Block until the consumer thread completes or is interrupted
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Exception while waiting for consumer to finish: " + e.getMessage());
+            log.error(e.getMessage());
         }
     }
 
     private static void registerShutdownHooks(ExecutorService executorService) {
         // Register a shutdown hook to catch Ctrl-C (SIGINT) and shutdown the executor
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutdown signal received. Stopping consumer...");
+            log.info("Shutdown signal received. Stopping consumer...");
             executorService.shutdownNow(); // Issue shutdown to stop the thread
             try {
                 if (!executorService.isTerminated()) {
                     executorService.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS);
                 }
             } catch (InterruptedException e) {
-                System.out.println("Shutdown interrupted.");
+                log.error(e.getMessage());
+              log.info("Shutdown interrupted.");
             }
-            System.out.println("Consumer stopped.");
+            log.info("Consumer stopped.");
         }));
     }
 }

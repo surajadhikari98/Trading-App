@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-public class TradeCsvChunkGenerator implements ChunkGenerator {
+public class ChunkGeneratorService implements ChunkGenerator {
 
     @Override
     public Integer generateAndSubmitChunks(String filePath, Integer numberOfChunks) throws FileNotFoundException {

@@ -1,7 +1,7 @@
 package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.JournalEntryRepository;
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.utils.DBUtils;
 
 import java.io.FileNotFoundException;

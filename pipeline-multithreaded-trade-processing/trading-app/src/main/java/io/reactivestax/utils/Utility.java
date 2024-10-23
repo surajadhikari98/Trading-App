@@ -1,6 +1,6 @@
 package io.reactivestax.utils;
 
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.infra.Infra;
 
 import java.util.concurrent.ThreadLocalRandom;

@@ -1,7 +1,7 @@
 package io.reactivestax.repository.hibernate;
 
 import io.reactivestax.contract.repository.PayloadRepository;
-import io.reactivestax.domain.Trade;
+import io.reactivestax.model.Trade;
 import io.reactivestax.entity.TradePayload;
 import io.reactivestax.enums.LookUpStatusEnum;
 import io.reactivestax.enums.PostedStatusEnum;

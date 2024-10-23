@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class InMemoryQueueMessageSender implements MessageSender {
-    List<LinkedBlockingDeque<String>> queueTracker;
 
     private static InMemoryQueueMessageSender instance;
 
