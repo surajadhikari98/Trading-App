@@ -13,7 +13,9 @@ import static io.reactivestax.factory.BeanFactory.getQueueMessageSender;
 import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
 
 @Slf4j
-public class QueueDistributor {
+public class MessagePublisherService {
+
+    private MessagePublisherService(){}
 
     // Get the queue number, or assign one in a round-robin or random manner based on application-properties
     public static void figureTheNextQueue(Trade trade) throws InterruptedException, IOException, TimeoutException {

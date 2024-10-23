@@ -7,9 +7,6 @@ import io.reactivestax.contract.repository.JournalEntryRepository;
 import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
 import io.reactivestax.domain.Trade;
-import io.reactivestax.factory.BeanFactory;
-import io.reactivestax.repository.jdbc.JDBCJournalEntryRepository;
-import io.reactivestax.repository.hibernate.HibernateTradePositionRepository;
 import io.reactivestax.utils.RabbitMQUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,12 +21,12 @@ import static io.reactivestax.factory.BeanFactory.*;
 import static io.reactivestax.utils.Utility.prepareTrade;
 
 @Slf4j
-public class CsvTradeProcessor implements Runnable, TradeProcessor {
+public class TradeProcessorService implements Runnable, TradeProcessor {
     private final LinkedBlockingDeque<String> dlQueue = new LinkedBlockingDeque<>();
     static AtomicInteger countSec = new AtomicInteger(0);
     private final String queueName;
 
-    public CsvTradeProcessor(String queueName) {
+    public TradeProcessorService(String queueName) {
         this.queueName = queueName;
     }
 
@@ -39,7 +36,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
         try {
             processTrade();
         } catch (Exception e) {
-            CsvTradeProcessor.log.info("trade processor:  {}", e.getMessage());
+            TradeProcessorService.log.info("trade processor:  {}", e.getMessage());
         }
     }
 
@@ -54,7 +51,8 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
             try {
                 processJournalWithPosition(tradeId);
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                log.info(e.getMessage());
+//                throw new RuntimeException(e);
             }
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 log.info("Position insertion successful ===========>");
@@ -100,7 +98,7 @@ public class CsvTradeProcessor implements Runnable, TradeProcessor {
     }
 
 
-    public void processPosition(Trade trade) throws SQLException, FileNotFoundException {
+    public void processPosition(Trade trade) throws Exception {
         PositionRepository positionsRepository = getPositionsRepository();
         Integer version = positionsRepository.getCusipVersion(trade);
         if (version != null) {

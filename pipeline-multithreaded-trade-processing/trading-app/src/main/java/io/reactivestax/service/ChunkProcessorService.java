@@ -16,12 +16,12 @@ import java.util.concurrent.*;
 import static io.reactivestax.utils.Utility.prepareTrade;
 
 @Slf4j
-public class TradeCsvChunkProcessor implements ChunkProcessor {
+public class ChunkProcessorService implements ChunkProcessor {
 
     ExecutorService chunkProcessorThreadPool;
     List<LinkedBlockingDeque<String>> queueTracker;
 
-    public TradeCsvChunkProcessor(ExecutorService chunkProcessorThreadPool) {
+    public ChunkProcessorService(ExecutorService chunkProcessorThreadPool) {
         this.chunkProcessorThreadPool = chunkProcessorThreadPool;
     }
 
@@ -54,7 +54,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
                     transactionUtil.startTransaction();
                     tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
                     transactionUtil.commitTransaction();
-                    QueueDistributor.figureTheNextQueue(trade);
+                    MessagePublisherService.figureTheNextQueue(trade);
                 }
             }
         }
@@ -63,7 +63,7 @@ public class TradeCsvChunkProcessor implements ChunkProcessor {
     public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws FileNotFoundException {
         for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
             executorService.submit(
-                    new CsvTradeProcessor(Infra.readFromApplicationPropertiesStringFormat("queue.name") + i));
+                    new TradeProcessorService(Infra.readFromApplicationPropertiesStringFormat("queue.name") + i));
         }
         executorService.shutdown();
     }
