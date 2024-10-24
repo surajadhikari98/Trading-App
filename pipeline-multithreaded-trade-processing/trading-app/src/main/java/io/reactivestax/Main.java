@@ -1,6 +1,6 @@
 package io.reactivestax;
 
-import io.reactivestax.service.ConsumerSubmitter;
+import io.reactivestax.service.ConsumerSubmitterService;
 import io.reactivestax.enums.AppModeEnum;
 import io.reactivestax.service.ChunkGeneratorService;
 import io.reactivestax.service.ChunkProcessorService;
@@ -47,7 +47,7 @@ public class Main {
         log.info("Starting in Consumer Mode...");
         ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(readFromApplicationPropertiesStringFormat("tradeProcessorThreadPoolSize")));
         for (int i = 0; i < BeanFactory.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
-            ConsumerSubmitter.startConsumer(executorService, readFromApplicationPropertiesStringFormat("queue.name") + i);
+            ConsumerSubmitterService.startConsumer(executorService, readFromApplicationPropertiesStringFormat("queue.name") + i);
         }
     }
 

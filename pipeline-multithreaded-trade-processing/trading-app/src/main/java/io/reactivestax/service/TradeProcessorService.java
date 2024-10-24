@@ -45,7 +45,7 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
 
     public static void processJournalWithPosition(String tradeId) throws Exception {
         PayloadRepository tradePayloadRepository = getTradePayloadRepository();
-        String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
+        String payload = tradePayloadRepository.readTradePayloadByTradeId(tradeId);
         SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
         JournalEntryRepository journalEntryRepository = getJournalEntryRepository();
         Trade trade = prepareTrade(payload);
@@ -53,7 +53,7 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
         if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
             log.warn("No security found....");
             log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
-            throw new Exception(); // For checking the max retry mechanism throwing error and catching it in retry mechanism.....
+            throw new SQLException(); // For checking the max retry mechanism throwing error and catching it in retry mechanism.....
         } else {
             journalEntryRepository.saveJournalEntry(trade);
             tradePayloadRepository.updateLookUpStatus(tradeId);

@@ -61,9 +61,14 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
     public void updateLookUpStatus(String tradeId) {
         Session session = HibernateUtil.getInstance().getConnection();
         session.beginTransaction();
-        TradePayload tradePayload = session.get(TradePayload.class, tradeId);
+        TradePayload tradePayload = session.createQuery("FROM TradePayload WHERE tradeId = :tradeId", TradePayload.class)
+                .setParameter("tradeId", tradeId)
+                .uniqueResult();
+
         tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.PASS));
+        session.persist(tradePayload);
         session.getTransaction().commit();
+
     }
 
 
@@ -71,8 +76,11 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
     public void updateJournalStatus(String tradeId) {
         Session session = HibernateUtil.getInstance().getConnection();
         session.beginTransaction();
-        TradePayload tradePayload = session.get(TradePayload.class, tradeId);
+        TradePayload tradePayload = session.createQuery("FROM TradePayload WHERE tradeId = :tradeId", TradePayload.class)
+                .setParameter("tradeId", tradeId)
+                .uniqueResult();
         tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
+        session.persist(tradePayload);
         session.getTransaction().commit();
     }
 

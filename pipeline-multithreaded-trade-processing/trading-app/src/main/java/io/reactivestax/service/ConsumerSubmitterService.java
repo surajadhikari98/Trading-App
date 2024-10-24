@@ -6,9 +6,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 @Slf4j
-public class ConsumerSubmitter {
+public class ConsumerSubmitterService {
 
-    private ConsumerSubmitter() {}
+    private ConsumerSubmitterService() {}
 
     public static void startConsumer(ExecutorService executorService, String queueName) {
 
