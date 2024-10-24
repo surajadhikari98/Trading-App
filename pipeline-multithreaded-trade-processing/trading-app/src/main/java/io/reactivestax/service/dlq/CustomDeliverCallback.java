@@ -3,11 +3,7 @@ package io.reactivestax.service.dlq;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
-import io.reactivestax.contract.repository.JournalEntryRepository;
-import io.reactivestax.contract.repository.PositionRepository;
-import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
 import io.reactivestax.infra.Infra;
-import io.reactivestax.model.Trade;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

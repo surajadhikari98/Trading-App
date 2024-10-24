@@ -108,13 +108,13 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
 //        latch.await(); // This will block the main thread forever until countDown() is called
     }
 
-    public static void processJournalWithPosition(String tradeId) throws FileNotFoundException, SQLException {
+    public static void processJournalWithPosition(String tradeId) throws Exception {
         String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
         SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
         JournalEntryRepository journalEntryRepository = getJournalEntryRepository();
         Trade trade = prepareTrade(payload);
         log.info("result journal{}", payload);
-        try {
+//        try {
             if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
                 log.warn("No security found....");
 //                dlQueue.put(trade.getTradeIdentifier());
@@ -124,10 +124,12 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
                 journalEntryRepository.saveJournalEntry(trade);
                 processPosition(trade);
             }
-        } catch (Exception e) {
-            Thread.currentThread().interrupt();
-            log.error(e.getMessage());
-        }
+//        } catch (Exception e) {
+////            Thread.currentThread().interrupt();
+//            System.out.println("exceptions"+ e.getMessage());
+//            log.error(e.getMessage());
+//        }
+//        }
     }
 
 
