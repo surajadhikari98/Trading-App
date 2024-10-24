@@ -8,6 +8,7 @@ import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
 import io.reactivestax.model.Trade;
 import lombok.extern.slf4j.Slf4j;
 
+import java.sql.SQLException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -50,7 +51,7 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
         if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
             log.warn("No security found....");
             log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
-            throw new Exception(); // For checking the max retry mechanism throwing error and catching it in retry mechanism.....
+            throw new SQLException(); // For checking the max retry mechanism throwing error and catching it in retry mechanism.....
         } else {
             journalEntryRepository.saveJournalEntry(trade);
             processPosition(trade);

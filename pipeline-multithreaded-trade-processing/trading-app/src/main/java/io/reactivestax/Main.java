@@ -45,7 +45,6 @@ public class Main {
 
     private static void startConsumer() throws FileNotFoundException {
         log.info("Starting in Consumer Mode...");
-        //process trades
         ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(readFromApplicationPropertiesStringFormat("tradeProcessorThreadPoolSize")));
         for (int i = 0; i < BeanFactory.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
             ConsumerSubmitter.startConsumer(executorService, readFromApplicationPropertiesStringFormat("queue.name") + i);

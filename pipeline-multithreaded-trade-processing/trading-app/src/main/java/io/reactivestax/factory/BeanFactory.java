@@ -1,6 +1,5 @@
 package io.reactivestax.factory;
 
-import com.mysql.cj.log.Log;
 import io.reactivestax.contract.MessageSender;
 import io.reactivestax.contract.QueueSetup;
 import io.reactivestax.contract.repository.*;
@@ -182,6 +181,10 @@ public class BeanFactory {
             QUEUE_LIST.add(new LinkedBlockingDeque<>());
         }
         return QUEUE_LIST;
+    }
+
+    public static void setChunksFileMappingQueue(String fileName) {
+        chunksFileMappingQueue.add(fileName);
     }
 
 

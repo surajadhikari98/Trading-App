@@ -3,6 +3,7 @@ package io.reactivestax.message.reciever.dlq;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
+import io.reactivestax.enums.RabbitMQHeaders;
 import io.reactivestax.factory.BeanFactory;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,22 +44,21 @@ public class RabbitMQMessageCallBack implements DeliverCallback {
         } catch (Exception e) {
             // Check the number of retries from the headers
             Map<String, Object> headers = delivery.getProperties().getHeaders();
-            int retries = headers != null && headers.containsKey("x-retries")
-                    ? (int) headers.get("x-retries")
+            int retries = headers != null && headers.containsKey(RabbitMQHeaders.X_RETRIES.getHeaderKey())
+                    ? (int) headers.get(RabbitMQHeaders.X_RETRIES.getHeaderKey())
                     : 0;
 
             if (retries >= BeanFactory.readFromApplicationPropertiesIntegerFormat("max.retry.count")) {
                 log.info(" [x] Max retries reached: {} . Discarding message: {}", retries, message);
                 try {
-                    channel.basicPublish("dead-letter-exchange", "dead-routing-key", null, delivery.getBody());
+                    channel.basicPublish(RabbitMQHeaders.X_DLE.getHeaderKey(), "dead-routing-key", null, delivery.getBody());
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 } catch (Exception ex) {
                     log.error(e.getMessage());
                 }
             } else {
-                // Retry message
                 AMQP.BasicProperties retryProps = new AMQP.BasicProperties.Builder()
-                        .headers(Map.of("x-retries", retries + 1)) // Increment retry count
+                        .headers(Map.of(RabbitMQHeaders.X_RETRIES.getHeaderKey(), retries + 1)) // Increment retry count
                         .build();
 
                 channel.basicPublish(readFromApplicationPropertiesStringFormat("queue.dlx.exchange"),
