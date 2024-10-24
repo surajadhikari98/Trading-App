@@ -6,7 +6,7 @@ import io.reactivestax.contract.repository.ConnectionUtil;
 import io.reactivestax.contract.repository.TransactionUtil;
 import io.reactivestax.exception.HikariCPConnectionException;
 import io.reactivestax.exception.TransactionHandlingException;
-import io.reactivestax.infra.Infra;
+import io.reactivestax.factory.BeanFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
@@ -27,9 +27,9 @@ public class DBUtils implements TransactionUtil, ConnectionUtil<Connection> {
 
     private void createDataSource() throws FileNotFoundException {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(Infra.readFromApplicationPropertiesStringFormat("db.url"));
-        config.setUsername(Infra.readFromApplicationPropertiesStringFormat("db.user.name"));
-        config.setPassword(Infra.readFromApplicationPropertiesStringFormat("db.password"));
+        config.setJdbcUrl(BeanFactory.readFromApplicationPropertiesStringFormat("db.url"));
+        config.setUsername(BeanFactory.readFromApplicationPropertiesStringFormat("db.user.name"));
+        config.setPassword(BeanFactory.readFromApplicationPropertiesStringFormat("db.password"));
 
         // Optional HikariCP settings
         config.setMaximumPoolSize(50); // Max 10 connections in the pool

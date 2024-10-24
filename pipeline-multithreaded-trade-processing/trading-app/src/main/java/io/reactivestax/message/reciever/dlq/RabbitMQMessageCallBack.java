@@ -1,9 +1,9 @@
-package io.reactivestax.service.dlq;
+package io.reactivestax.message.reciever.dlq;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
-import io.reactivestax.infra.Infra;
+import io.reactivestax.factory.BeanFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -11,18 +11,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
+import static io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesStringFormat;
 import static io.reactivestax.service.TradeProcessorService.processJournalWithPosition;
 
 @Slf4j
-public class CustomDeliverCallback implements DeliverCallback {
+public class RabbitMQMessageCallBack implements DeliverCallback {
 
     private final Channel channel;
     private final String queueName;
     static AtomicInteger messageCounter = new AtomicInteger(0);
 
 
-    public CustomDeliverCallback(Channel channel, String queueName) {
+    public RabbitMQMessageCallBack(Channel channel, String queueName) {
         this.channel = channel;
         this.queueName = queueName;
     }
@@ -47,10 +47,9 @@ public class CustomDeliverCallback implements DeliverCallback {
                     ? (int) headers.get("x-retries")
                     : 0;
 
-            if (retries >= Infra.readFromApplicationPropertiesIntegerFormat("max.retry.count")) {
+            if (retries >= BeanFactory.readFromApplicationPropertiesIntegerFormat("max.retry.count")) {
                 log.info(" [x] Max retries reached: {} . Discarding message: {}", retries, message);
                 try {
-                    System.out.println("rejected");
                     channel.basicPublish("dead-letter-exchange", "dead-routing-key", null, delivery.getBody());
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 } catch (Exception ex) {

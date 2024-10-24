@@ -1,13 +1,15 @@
-package io.reactivestax.service.dlq;
+package io.reactivestax.message.reciever.dlq;
 
 import com.rabbitmq.client.CancelCallback;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
+@Slf4j
 public class CustomCancelCallback implements CancelCallback {
 
     @Override
     public void handle(String consumerTag) throws IOException {
-        System.out.println(" [x] Consumer '" + consumerTag + "' cancelled.");
+        log.info(" [x] Consumer ' {} cancelled." , consumerTag);
     }
 }

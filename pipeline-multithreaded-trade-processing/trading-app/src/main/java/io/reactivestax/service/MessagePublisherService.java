@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
 import static io.reactivestax.factory.BeanFactory.getQueueMessageSender;
-import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
+import static io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesStringFormat;
 
 @Slf4j
 public class MessagePublisherService {

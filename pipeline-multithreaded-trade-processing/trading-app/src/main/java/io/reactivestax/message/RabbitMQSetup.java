@@ -1,21 +1,19 @@
-package io.reactivestax.message.sender;
+package io.reactivestax.message;
 
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import io.reactivestax.contract.QueueSetup;
-import io.reactivestax.service.dlq.CustomCancelCallback;
-import io.reactivestax.service.dlq.CustomDeliverCallback;
+import io.reactivestax.message.reciever.dlq.CustomCancelCallback;
+import io.reactivestax.message.reciever.dlq.RabbitMQMessageCallBack;
 import io.reactivestax.utils.RabbitMQUtils;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import static io.reactivestax.infra.Infra.readFromApplicationPropertiesStringFormat;
+import static io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesStringFormat;
 
 public class RabbitMQSetup implements QueueSetup {
 
@@ -31,7 +29,7 @@ public class RabbitMQSetup implements QueueSetup {
         return instance;
     }
 
-    public void setUpQueue(String queueName) throws IOException, TimeoutException {
+    public void publishMessage(String queueName) throws IOException, TimeoutException {
         String dlxExchange = readFromApplicationPropertiesStringFormat("queue.dlx.exchange");
         Channel channel = RabbitMQUtils.getRabbitMQChannel();
         // Declare Dead Letter Exchange (DLX) and Queue (DLQ)
@@ -62,7 +60,7 @@ public class RabbitMQSetup implements QueueSetup {
         channel.queueDeclare("dead-queue", true, false, false, null);
         channel.queueBind("dead-queue", "dead-letter-exchange", "dead-routing-key");
 
-        DeliverCallback deliverCallback = new CustomDeliverCallback(channel, queueName);
+        DeliverCallback deliverCallback = new RabbitMQMessageCallBack(channel, queueName);
 
         CancelCallback cancelCallback = new CustomCancelCallback();
 

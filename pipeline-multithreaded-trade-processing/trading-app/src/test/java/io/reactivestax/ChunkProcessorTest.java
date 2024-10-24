@@ -2,7 +2,7 @@
 //
 //import io.reactivestax.service.TradeCsvChunkProcessor;
 //import io.reactivestax.hikari.DataSource;
-//import io.reactivestax.infra.Infra;
+//import io.reactivestax.factory.factory;
 //import io.reactivestax.repository.jdbc.TradePayloadRepository;
 //import org.junit.Test;
 //
@@ -18,7 +18,7 @@
 //    public void testInsertionInTradePayloadTable() throws Exception {
 //        Connection connection = DataSource.getConnection();
 //        TradePayloadRepository tradePayloadRepository = new TradePayloadRepository(connection);
-//        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunk.processor.thread.pool.size")));
+//        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(factory.readFromApplicationPropertiesStringFormat("chunk.processor.thread.pool.size")));
 //
 //        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool);
 //        tradeCsvChunkProcessor.insertTradeIntoTradePayloadTable("src/test/resources/test_trade.csv");

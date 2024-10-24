@@ -4,5 +4,5 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 public interface QueueSetup {
-    void setUpQueue(String queueName) throws IOException, TimeoutException;
+    void publishMessage(String queueName) throws IOException, TimeoutException;
 }

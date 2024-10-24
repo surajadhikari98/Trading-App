@@ -1,7 +1,7 @@
 package io.reactivestax.utils;
 
 import io.reactivestax.model.Trade;
-import io.reactivestax.infra.Infra;
+import io.reactivestax.factory.BeanFactory;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Utility {
 
     public static AtomicInteger roundRobinIndex = new AtomicInteger(0);
-      static int numberOfQueues = Infra.readFromApplicationPropertiesIntegerFormat("number.queues");
+      static int numberOfQueues = BeanFactory.readFromApplicationPropertiesIntegerFormat("number.queues");
 
       public static int roundRobin(){
        return roundRobinIndex.incrementAndGet() % numberOfQueues + 1;

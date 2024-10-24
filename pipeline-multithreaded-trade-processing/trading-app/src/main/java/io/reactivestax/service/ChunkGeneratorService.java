@@ -1,7 +1,7 @@
 package io.reactivestax.service;
 
 import io.reactivestax.contract.ChunkGenerator;
-import io.reactivestax.infra.Infra;
+import io.reactivestax.factory.BeanFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
@@ -49,7 +49,7 @@ public class ChunkGeneratorService implements ChunkGenerator {
                     }
                     startLine.set(endLine);
                     //adding to queue for making the chunk generator and chunk processor decoupled
-                    Infra.setChunksFileMappingQueue(outputFile);
+                    BeanFactory.setChunksFileMappingQueue(outputFile);
                     log.info("Created  {}", outputFile);
                 } catch (IOException e) {
                     log.info("Error in chunks generation {}", e.getMessage());

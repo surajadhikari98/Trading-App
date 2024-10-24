@@ -11,15 +11,12 @@ public class ConsumerSubmitter {
     private ConsumerSubmitter() {}
 
     public static void startConsumer(ExecutorService executorService, String queueName) {
-        // Create an ExecutorService with a single thread
 
-        // Submit the consumer task
         TradeProcessorService consumerTask = new TradeProcessorService(queueName);
         Future<Void> consumerFuture = executorService.submit(consumerTask);
 
         registerShutdownHooks(executorService);
 
-        // Keep the main thread alive until shutdown is triggered
         try {
             consumerFuture.get(); // Block until the consumer thread completes or is interrupted
         } catch (Exception e) {

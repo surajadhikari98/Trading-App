@@ -5,7 +5,6 @@ import io.reactivestax.contract.repository.PayloadRepository;
 import io.reactivestax.contract.repository.TransactionUtil;
 import io.reactivestax.model.Trade;
 import io.reactivestax.factory.BeanFactory;
-import io.reactivestax.infra.Infra;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -28,10 +27,10 @@ public class ChunkProcessorService implements ChunkProcessor {
 
     @Override
     public void processChunk() throws Exception {
-        int chunkProcessorThreadPoolSize = Infra.readFromApplicationPropertiesIntegerFormat("chunk.processor.thread.pool.size");
+        int chunkProcessorThreadPoolSize = io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesIntegerFormat("chunk.processor.thread.pool.size");
         for (int i = 0; i < chunkProcessorThreadPoolSize; i++) {
             //consulting to the queue for reading the chunksFile
-            String chunkFileName = Infra.getChunksFileMappingQueue().take();
+            String chunkFileName = io.reactivestax.factory.BeanFactory.getChunksFileMappingQueue().take();
             chunkProcessorThreadPool.submit(() -> {
                 try {
                     insertTradeIntoTradePayloadTable(chunkFileName);
@@ -58,14 +57,4 @@ public class ChunkProcessorService implements ChunkProcessor {
                 }
             }
         }
-
-
-    public void startMultiThreadsForTradeProcessor(ExecutorService executorService) throws FileNotFoundException {
-        for (int i = 0; i < Infra.readFromApplicationPropertiesIntegerFormat("number.queues"); i++) {
-            executorService.submit(
-                    new TradeProcessorService(Infra.readFromApplicationPropertiesStringFormat("queue.name") + i));
-        }
-        executorService.shutdown();
-    }
-
 }

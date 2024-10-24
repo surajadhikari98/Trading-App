@@ -3,7 +3,7 @@
 //import io.reactivestax.component.CsvTradeProcessor;
 //import io.reactivestax.component.TradeCsvChunkProcessor;
 //import io.reactivestax.hikari.DataSource;
-//import io.reactivestax.infra.Infra;
+//import io.reactivestax.factory.factory;
 //import io.reactivestax.repository.jdbc.CsvTradeProcessorRepository;
 //import io.reactivestax.repository.jdbc.TradePositionRepository;
 //import org.junit.Before;
@@ -48,8 +48,8 @@
 //    }
 //
 //       private void prepareTradePayloads() throws Exception {
-//        List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
-//        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
+//        List<LinkedBlockingDeque<String>> queues = factory.addToQueueList();
+//        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(factory.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
 //
 //        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, queues);
 //        tradeCsvChunkProcessor.insertTradeIntoTradePayloadTable("src/test/resources/test_trade.csv");
