@@ -3,7 +3,7 @@ package io.reactivestax.message;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
-import io.reactivestax.contract.QueueSetup;
+import io.reactivestax.contract.QueueLoader;
 import io.reactivestax.enums.RabbitMQHeaders;
 import io.reactivestax.message.reciever.dlq.CustomCancelCallback;
 import io.reactivestax.message.reciever.dlq.RabbitMQMessageCallBack;
@@ -16,21 +16,33 @@ import java.util.concurrent.TimeoutException;
 
 import static io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesStringFormat;
 
-public class RabbitMQSetup implements QueueSetup {
+public class RabbitMQLoader implements QueueLoader {
 
-    private static RabbitMQSetup instance;
+    private static RabbitMQLoader instance;
 
-    private RabbitMQSetup() {
+    private RabbitMQLoader() {
     }
 
-    public static synchronized RabbitMQSetup getInstance() {
+    public static synchronized RabbitMQLoader getInstance() {
         if (instance == null) {
-            instance = new RabbitMQSetup();
+            instance = new RabbitMQLoader();
         }
         return instance;
     }
 
-    public void publishMessage(String queueName) throws IOException, TimeoutException {
+    public void consumeMessage(String queueName) throws IOException, TimeoutException {
+
+        Channel channel = setUpQueueWithRetry(queueName);
+
+        DeliverCallback deliverCallback = new RabbitMQMessageCallBack(channel, queueName);
+
+        CancelCallback cancelCallback = new CustomCancelCallback();
+
+        // Start consuming messages with manual acknowledgment
+        channel.basicConsume(queueName, false, deliverCallback, cancelCallback);
+    }
+
+    private static Channel setUpQueueWithRetry(String queueName) throws IOException, TimeoutException {
         String dlxExchange = readFromApplicationPropertiesStringFormat("queue.dlx.exchange");
         Channel channel = RabbitMQUtils.getRabbitMQChannel();
 
@@ -38,8 +50,9 @@ public class RabbitMQSetup implements QueueSetup {
 
         // DLQ should have a TTL and dead-lettering back to the main queue
         Map<String, Object> dlqArguments = new HashMap<>();
-        dlqArguments.put(RabbitMQHeaders.X_TTL.getHeaderKey(), 5000); // Retry delay in milliseconds (5 seconds)
-        dlqArguments.put(RabbitMQHeaders.X_DLE.getHeaderKey(), readFromApplicationPropertiesStringFormat("queue.exchange.name")); // Requeue to main exchange
+        dlqArguments.put(RabbitMQHeaders.X_TTL.getHeaderKey(), 5000);
+        dlqArguments.put(RabbitMQHeaders.X_DLE.getHeaderKey(),
+                readFromApplicationPropertiesStringFormat("queue.exchange.name")); // Requeue to main exchange
         dlqArguments.put(RabbitMQHeaders.X_DLRK.getHeaderKey() + queueName, queueName); // Requeue to the main queue, here the main key routing key is queueName.
 
         // Declare DLQ with TTL
@@ -60,12 +73,6 @@ public class RabbitMQSetup implements QueueSetup {
         channel.exchangeDeclare(RabbitMQHeaders.X_DLE.getHeaderKey(), "direct");
         channel.queueDeclare(RabbitMQHeaders.X_DEATH.getHeaderKey(), true, false, false, null);
         channel.queueBind(RabbitMQHeaders.X_DEATH.getHeaderKey(), RabbitMQHeaders.X_DLE.getHeaderKey(), "dead-routing-key");
-
-        DeliverCallback deliverCallback = new RabbitMQMessageCallBack(channel, queueName);
-
-        CancelCallback cancelCallback = new CustomCancelCallback();
-
-        // Start consuming messages with manual acknowledgment
-        channel.basicConsume(queueName, false, deliverCallback, cancelCallback);
+        return channel;
     }
 }

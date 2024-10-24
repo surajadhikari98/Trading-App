@@ -32,7 +32,7 @@ public class DBUtils implements TransactionUtil, ConnectionUtil<Connection> {
         config.setPassword(BeanFactory.readFromApplicationPropertiesStringFormat("db.password"));
 
         // Optional HikariCP settings
-        config.setMaximumPoolSize(50); // Max 10 connections in the pool
+        config.setMaximumPoolSize(50); // Max 50 connections in the pool
         config.setMinimumIdle(5); // Minimum idle connections
         config.setConnectionTimeout(30000); // 30 seconds timeout for obtaining a connection
         config.setIdleTimeout(600000); // 10 minutes idle timeout
@@ -53,14 +53,15 @@ public class DBUtils implements TransactionUtil, ConnectionUtil<Connection> {
         Connection connection = connectionHolder.get();
         if (connection == null) {
             dataSource = getHikkariDataSource();
+            try {
+                connection = dataSource.getConnection();
+                connectionHolder.set(connection);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                throw new HikariCPConnectionException("Error getting connection from HikkariCp", e);
+            }
         }
-        try {
-            connection = dataSource.getConnection();
-            connectionHolder.set(connection);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new HikariCPConnectionException("Error getting connection from HikkariCp", e);
-        }
+
         return connection;
     }
 
@@ -86,11 +87,10 @@ public class DBUtils implements TransactionUtil, ConnectionUtil<Connection> {
 
     @Override
     public void startTransaction() {
-        try{
+        try {
             getConnection().setAutoCommit(false);
-        }catch (SQLException | FileNotFoundException e){
+        } catch (SQLException | FileNotFoundException e) {
             log.error(e.getMessage());
-            throw new RuntimeException(e);
         }
     }
 

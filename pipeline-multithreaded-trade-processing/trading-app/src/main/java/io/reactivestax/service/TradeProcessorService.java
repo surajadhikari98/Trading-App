@@ -1,8 +1,9 @@
 package io.reactivestax.service;
 
-import io.reactivestax.contract.QueueSetup;
+import io.reactivestax.contract.QueueLoader;
 import io.reactivestax.contract.TradeProcessor;
 import io.reactivestax.contract.repository.JournalEntryRepository;
+import io.reactivestax.contract.repository.PayloadRepository;
 import io.reactivestax.contract.repository.PositionRepository;
 import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
 import io.reactivestax.model.Trade;
@@ -37,12 +38,13 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
 
     @Override
     public void processTrade() throws Exception {
-        QueueSetup queueSetUp = getQueueSetUp();
-        assert queueSetUp != null;
-        queueSetUp.publishMessage(queueName);
+        QueueLoader queueLoader = getQueueSetUp();
+        assert queueLoader != null;
+        queueLoader.consumeMessage(queueName);
     }
 
     public static void processJournalWithPosition(String tradeId) throws Exception {
+        PayloadRepository tradePayloadRepository = getTradePayloadRepository();
         String payload = getTradePayloadRepository().readTradePayloadByTradeId(tradeId);
         SecuritiesReferenceRepository lookupSecuritiesRepository = getLookupSecuritiesRepository();
         JournalEntryRepository journalEntryRepository = getJournalEntryRepository();
@@ -51,13 +53,14 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
         if (!lookupSecuritiesRepository.lookupSecurities(trade.getCusip())) {
             log.warn("No security found....");
             log.debug("times {} {}", trade.getCusip(), countSec.incrementAndGet());
-            throw new SQLException(); // For checking the max retry mechanism throwing error and catching it in retry mechanism.....
+            throw new Exception(); // For checking the max retry mechanism throwing error and catching it in retry mechanism.....
         } else {
             journalEntryRepository.saveJournalEntry(trade);
+            tradePayloadRepository.updateLookUpStatus(tradeId);
+            tradePayloadRepository.updateJournalStatus(tradeId);
             processPosition(trade);
         }
     }
-
 
     public static void processPosition(Trade trade) throws Exception {
         PositionRepository positionsRepository = getPositionsRepository();

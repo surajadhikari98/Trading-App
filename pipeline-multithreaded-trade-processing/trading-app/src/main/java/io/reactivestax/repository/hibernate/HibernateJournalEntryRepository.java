@@ -3,8 +3,6 @@ package io.reactivestax.repository.hibernate;
 import io.reactivestax.contract.repository.JournalEntryRepository;
 import io.reactivestax.model.Trade;
 import io.reactivestax.entity.JournalEntries;
-import io.reactivestax.entity.TradePayload;
-import io.reactivestax.enums.PostedStatusEnum;
 import io.reactivestax.utils.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -53,13 +51,5 @@ public class HibernateJournalEntryRepository implements JournalEntryRepository {
     }
 
 
-    @Override
-    public void updateJournalStatus(String tradeId) {
-       Session session = HibernateUtil.getInstance().getConnection();
-            session.beginTransaction();
-            TradePayload tradePayload = session.get(TradePayload.class, tradeId);
-            tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
-            session.getTransaction().commit();
-        }
 }
 

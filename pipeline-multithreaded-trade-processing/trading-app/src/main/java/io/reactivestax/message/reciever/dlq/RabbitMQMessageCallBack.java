@@ -42,7 +42,6 @@ public class RabbitMQMessageCallBack implements DeliverCallback {
             log.info(" [x] Total messages consumed: {} from {}", currentCount, queueName);
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
         } catch (Exception e) {
-            // Check the number of retries from the headers
             Map<String, Object> headers = delivery.getProperties().getHeaders();
             int retries = headers != null && headers.containsKey(RabbitMQHeaders.X_RETRIES.getHeaderKey())
                     ? (int) headers.get(RabbitMQHeaders.X_RETRIES.getHeaderKey())

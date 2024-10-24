@@ -19,9 +19,10 @@ public class HibernateTradePositionRepository implements PositionRepository {
 
     private static HibernateTradePositionRepository instance;
 
-    private HibernateTradePositionRepository(){}
+    private HibernateTradePositionRepository() {
+    }
 
-    public static synchronized HibernateTradePositionRepository getInstance(){
+    public static synchronized HibernateTradePositionRepository getInstance() {
         if (instance == null) {
             instance = new HibernateTradePositionRepository();
         }
@@ -31,65 +32,63 @@ public class HibernateTradePositionRepository implements PositionRepository {
     @Override
     public boolean insertPosition(Trade trade) throws SQLException {
         Session session = HibernateUtil.getInstance().getConnection();
-            Transaction transaction = null;
-            try {
-                transaction = session.beginTransaction();
-                Position position = new Position();
-                position.setAccountNumber(trade.getAccountNumber());
-                position.setCusip(trade.getCusip());
-                position.setPosition(BigInteger.valueOf(trade.getQuantity()));
-                position.setDirection(trade.getDirection());
-                session.persist(position);
-                transaction.commit();
+        Transaction transaction = null;
+        try {
+            transaction = session.beginTransaction();
+            Position position = new Position();
+            position.setAccountNumber(trade.getAccountNumber());
+            position.setCusip(trade.getCusip());
+            position.setPosition(BigInteger.valueOf(trade.getQuantity()));
+            position.setDirection(trade.getDirection());
+            session.persist(position);
+            transaction.commit();
 
-            } catch (Exception e) {
-                if (transaction != null) {
-                    transaction.rollback();
-                    return false;
-                }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+                return false;
             }
+        }
         return true;
     }
 
     public boolean updatePosition(Trade trade, int version) throws Exception {
         Session session = HibernateUtil.getInstance().getConnection();
-            Transaction transaction = null;
-            try {
+        Transaction transaction = null;
+        try {
 
-                HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-                CriteriaQuery<Position> query = cb.createQuery(Position.class);
-                Root<Position> root = query.from(Position.class);
+            HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+            CriteriaQuery<Position> query = cb.createQuery(Position.class);
+            Root<Position> root = query.from(Position.class);
 
-                Predicate accountNumberClause = cb.equal(root.get("accountNumber"), trade.getAccountNumber());
-                Predicate cusipClause = cb.equal(root.get("cusip"), trade.getCusip());
-                Predicate versionClause = cb.equal(root.get("version"), version);
+            Predicate accountNumberClause = cb.equal(root.get("accountNumber"), trade.getAccountNumber());
+            Predicate cusipClause = cb.equal(root.get("cusip"), trade.getCusip());
+            Predicate versionClause = cb.equal(root.get("version"), version);
 
-                query.select(root).where(cb.and(accountNumberClause, cusipClause, versionClause)); //for OR we can use cb.or clause
+            query.select(root).where(cb.and(accountNumberClause, cusipClause, versionClause)); //for OR we can use cb.or clause
 
-                Position position = session.createQuery(query).uniqueResult();
+            Position position = session.createQuery(query).uniqueResult();
 
 
-                transaction = session.beginTransaction();
-                if (position.getDirection().equalsIgnoreCase("BUY")) {
-                    position.getPosition().add(BigInteger.valueOf(trade.getPosition()));
-                } else {
-                    position.getPosition().subtract(BigInteger.valueOf(trade.getPosition()));
-                }
+            transaction = session.beginTransaction();
+            if (position.getDirection().equalsIgnoreCase("BUY")) {
+                position.getPosition().add(BigInteger.valueOf(trade.getPosition()));
+            } else {
+                position.getPosition().subtract(BigInteger.valueOf(trade.getPosition()));
+            }
 
-                position.setVersion(version + 1);
+            position.setVersion(version + 1);
 
-                session.persist(position);
+            session.persist(position);
 
-                transaction.commit();
+            transaction.commit();
 
-            } catch (Exception e) {
-                throw new Exception(e);
-//                if (transaction != null) {
-//                    transaction.rollback();
-//                    System.out.println(e.getMessage());
-////                    throw new Exception(e);
-//                    return false;
-//                }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+                System.out.println(e.getMessage());
+                return false;
+            }
 
         }
         return true;
@@ -99,20 +98,20 @@ public class HibernateTradePositionRepository implements PositionRepository {
     //using the criteria api for returning the payloadByTradeId
     public Integer getCusipVersion(Trade trade) {
         Session session = HibernateUtil.getInstance().getConnection();
-            final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-            CriteriaQuery<Integer> query = criteriaBuilder.createQuery(Integer.class);
-            Root<Position> root = query.from(Position.class);
-            query.select(root.get("version"));
+        final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<Integer> query = criteriaBuilder.createQuery(Integer.class);
+        Root<Position> root = query.from(Position.class);
+        query.select(root.get("version"));
 
 
-            // Add multiple where conditions using criteriaBuilder.and()
-            Predicate accountNumberPredicate = criteriaBuilder.equal(root.get("accountNumber"), trade.getAccountNumber());
-            Predicate cusipPredicate = criteriaBuilder.equal(root.get("cusip"), trade.getCusip());
+        // Add multiple where conditions using criteriaBuilder.and()
+        Predicate accountNumberPredicate = criteriaBuilder.equal(root.get("accountNumber"), trade.getAccountNumber());
+        Predicate cusipPredicate = criteriaBuilder.equal(root.get("cusip"), trade.getCusip());
 
-            // Combine predicates with AND
-            query.where(criteriaBuilder.and(accountNumberPredicate, cusipPredicate));
+        // Combine predicates with AND
+        query.where(criteriaBuilder.and(accountNumberPredicate, cusipPredicate));
 
-            return session.createQuery(query).uniqueResult();
-        }
+        return session.createQuery(query).uniqueResult();
     }
+}
 

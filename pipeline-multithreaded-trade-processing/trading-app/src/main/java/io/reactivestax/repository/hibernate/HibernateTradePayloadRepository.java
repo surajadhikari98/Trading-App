@@ -67,6 +67,16 @@ public class HibernateTradePayloadRepository implements PayloadRepository {
     }
 
 
+    @Override
+    public void updateJournalStatus(String tradeId) {
+        Session session = HibernateUtil.getInstance().getConnection();
+        session.beginTransaction();
+        TradePayload tradePayload = session.get(TradePayload.class, tradeId);
+        tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.POSTED));
+        session.getTransaction().commit();
+    }
+
+
     //using the criteria api for returning the payloadByTradeId
     @Override
     public String readTradePayloadByTradeId(String tradeId) {

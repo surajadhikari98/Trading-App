@@ -41,16 +41,8 @@ public class JDBCJournalEntryRepository implements JournalEntryRepository {
     }
 
 
-    @Override
-    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
-        Connection connection = DBUtils.getInstance().getConnection();
-        String updateQuery = "UPDATE trade_payloads SET je_status  = ? WHERE trade_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
-            stmt.setString(1, "posted");
-            stmt.setString(2, tradeId);
-            stmt.executeUpdate();
-        }
-    }
+
+
 
     public String callStoredProcedureForJournalAndPositionUpdate(Trade trade) throws Exception {
         String sql = "CALL insert_journal_and_position(?, ?, ?, ?, ?, ?, ?, ?, ?)";

@@ -16,8 +16,7 @@ public class JDBCTradePositionRepository implements PositionRepository {
 
     private static JDBCTradePositionRepository instance;
 
-    private JDBCTradePositionRepository() {
-    }
+    private JDBCTradePositionRepository() {}
 
     public static synchronized JDBCTradePositionRepository getInstance() {
         if (instance == null) {
@@ -38,7 +37,7 @@ public class JDBCTradePositionRepository implements PositionRepository {
             if (rs.next()) {
                 return rs.getInt("version");
             } else {
-                return -1;
+                return null;
             }
         }
     }

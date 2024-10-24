@@ -8,7 +8,4 @@ import java.sql.SQLException;
 public interface JournalEntryRepository {
 
     void saveJournalEntry(Trade trade) throws SQLException, FileNotFoundException;
-
-    void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException;
-
 }

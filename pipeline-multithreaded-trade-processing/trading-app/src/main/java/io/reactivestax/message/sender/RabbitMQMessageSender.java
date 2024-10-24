@@ -31,7 +31,7 @@ public class RabbitMQMessageSender implements MessageSender {
                 null,
                 message.getBytes(StandardCharsets.UTF_8)
         );
-        System.out.println(" [x] Sent '" + message + "' with routing key '" + queueName + "'");
+        log.info(" [x] Sent  {}  with routing key {} ", message, queueName);
         return true;
     }
 }

@@ -1,6 +1,8 @@
 package io.reactivestax.repository.jdbc;
 
 import io.reactivestax.contract.repository.PayloadRepository;
+import io.reactivestax.enums.LookUpStatusEnum;
+import io.reactivestax.enums.PostedStatusEnum;
 import io.reactivestax.model.Trade;
 import io.reactivestax.enums.StatusReasonEnum;
 import io.reactivestax.enums.ValidityStatusEnum;
@@ -30,10 +32,22 @@ public class JDBCTradePayloadRepository implements PayloadRepository {
         Connection connection = DBUtils.getInstance().getConnection();
         String updateQuery = "UPDATE trade_payloads SET lookup_status  = ? WHERE trade_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
-            stmt.setString(1, "pass");
+            stmt.setString(1, String.valueOf(LookUpStatusEnum.PASS));
             stmt.setString(2, tradeId);
             stmt.executeUpdate();
-            System.out.println("lookup updated suceesfully for: " + tradeId);
+            System.out.println("lookup updated successfully for: " + tradeId);
+        }
+    }
+
+
+    @Override
+    public void updateJournalStatus(String tradeId) throws SQLException, FileNotFoundException {
+        Connection connection = DBUtils.getInstance().getConnection();
+        String updateQuery = "UPDATE trade_payloads SET je_status  = ? WHERE trade_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(updateQuery)) {
+            stmt.setString(1, String.valueOf(PostedStatusEnum.POSTED));
+            stmt.setString(2, tradeId);
+            stmt.executeUpdate();
         }
     }
 
