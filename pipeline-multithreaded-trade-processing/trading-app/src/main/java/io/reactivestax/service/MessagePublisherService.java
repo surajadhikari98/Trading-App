@@ -1,7 +1,7 @@
 package io.reactivestax.service;
 
 import io.reactivestax.model.Trade;
-import io.reactivestax.utils.Utility;
+import io.reactivestax.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

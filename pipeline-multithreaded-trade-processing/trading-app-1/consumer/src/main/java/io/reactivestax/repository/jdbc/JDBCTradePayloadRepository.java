@@ -1,17 +1,17 @@
 package io.reactivestax.repository.jdbc;
 
-import io.reactivestax.contract.repository.PayloadRepository;
-import io.reactivestax.enums.LookUpStatusEnum;
-import io.reactivestax.enums.PostedStatusEnum;
-import io.reactivestax.dto.Trade;
-import io.reactivestax.enums.StatusReasonEnum;
-import io.reactivestax.enums.ValidityStatusEnum;
-import io.reactivestax.utils.DBUtils;
+import io.reactivestax.types.contract.repository.PayloadRepository;
+import io.reactivestax.types.enums.LookUpStatusEnum;
+import io.reactivestax.types.enums.PostedStatusEnum;
+import io.reactivestax.types.dto.Trade;
+import io.reactivestax.types.enums.StatusReasonEnum;
+import io.reactivestax.types.enums.ValidityStatusEnum;
+import io.reactivestax.utility.DBUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
 
-import static io.reactivestax.utils.Utility.prepareTrade;
+import static io.reactivestax.utility.Utility.prepareTrade;
 
 
 public class JDBCTradePayloadRepository implements PayloadRepository {

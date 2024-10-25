@@ -1,12 +1,12 @@
 package io.reactivestax.repository.hibernate;
 
-import io.reactivestax.contract.repository.PayloadRepository;
-import io.reactivestax.dto.Trade;
-import io.reactivestax.entity.TradePayload;
-import io.reactivestax.enums.LookUpStatusEnum;
-import io.reactivestax.enums.PostedStatusEnum;
-import io.reactivestax.enums.ValidityStatusEnum;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.types.contract.repository.PayloadRepository;
+import io.reactivestax.types.dto.Trade;
+import io.reactivestax.repository.hibernate.entity.TradePayload;
+import io.reactivestax.types.enums.LookUpStatusEnum;
+import io.reactivestax.types.enums.PostedStatusEnum;
+import io.reactivestax.types.enums.ValidityStatusEnum;
+import io.reactivestax.utility.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -14,7 +14,7 @@ import org.hibernate.Session;
 
 import java.util.List;
 
-import static io.reactivestax.utils.Utility.prepareTrade;
+import static io.reactivestax.utility.Utility.prepareTrade;
 
 
 public class HibernateTradePayloadRepository implements PayloadRepository {

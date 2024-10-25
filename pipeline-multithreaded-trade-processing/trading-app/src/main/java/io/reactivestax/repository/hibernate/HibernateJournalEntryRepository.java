@@ -3,7 +3,7 @@ package io.reactivestax.repository.hibernate;
 import io.reactivestax.contract.repository.JournalEntryRepository;
 import io.reactivestax.model.Trade;
 import io.reactivestax.entity.JournalEntries;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.utility.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 

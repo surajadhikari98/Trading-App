@@ -1,6 +1,6 @@
 package io.reactivestax.service;
 
-import io.reactivestax.contract.ChunkGenerator;
+import io.reactivestax.types.contract.ChunkGenerator;
 import io.reactivestax.factory.BeanFactory;
 import lombok.extern.slf4j.Slf4j;
 

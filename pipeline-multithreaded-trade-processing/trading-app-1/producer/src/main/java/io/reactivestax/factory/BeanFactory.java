@@ -1,13 +1,14 @@
 package io.reactivestax.factory;
 
-import io.reactivestax.contract.MessageSender;
-import io.reactivestax.contract.repository.*;
-import io.reactivestax.exception.InvalidPersistenceTechnologyException;
+import io.reactivestax.types.contract.MessageSender;
+import io.reactivestax.types.contract.repository.PayloadRepository;
+import io.reactivestax.types.contract.repository.TransactionUtil;
+import io.reactivestax.types.exceptions.InvalidPersistenceTechnologyException;
 import io.reactivestax.repository.jdbc.JDBCTradePayloadRepository;
 import io.reactivestax.repository.hibernate.HibernateTradePayloadRepository;
-import io.reactivestax.sender.RabbitMQMessageSender;
-import io.reactivestax.utils.DBUtils;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.utility.messaging.RabbitMQMessageSender;
+import io.reactivestax.utility.database.DBUtils;
+import io.reactivestax.utility.database.HibernateUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

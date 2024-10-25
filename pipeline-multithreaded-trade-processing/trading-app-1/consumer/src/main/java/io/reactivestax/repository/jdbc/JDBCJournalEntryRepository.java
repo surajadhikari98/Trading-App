@@ -1,8 +1,8 @@
 package io.reactivestax.repository.jdbc;
 
-import io.reactivestax.contract.repository.JournalEntryRepository;
-import io.reactivestax.dto.Trade;
-import io.reactivestax.utils.DBUtils;
+import io.reactivestax.types.contract.repository.JournalEntryRepository;
+import io.reactivestax.types.dto.Trade;
+import io.reactivestax.utility.DBUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.*;

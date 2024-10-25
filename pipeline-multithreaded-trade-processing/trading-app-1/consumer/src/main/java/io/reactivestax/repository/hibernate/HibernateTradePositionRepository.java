@@ -1,9 +1,9 @@
 package io.reactivestax.repository.hibernate;
 
-import io.reactivestax.contract.repository.PositionRepository;
-import io.reactivestax.dto.Trade;
-import io.reactivestax.entity.Position;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.types.contract.repository.PositionRepository;
+import io.reactivestax.types.dto.Trade;
+import io.reactivestax.repository.hibernate.entity.Position;
+import io.reactivestax.utility.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;

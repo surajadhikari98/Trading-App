@@ -1,12 +1,12 @@
 package io.reactivestax.service;
 
-import io.reactivestax.contract.QueueLoader;
-import io.reactivestax.contract.TradeProcessor;
-import io.reactivestax.contract.repository.JournalEntryRepository;
-import io.reactivestax.contract.repository.PayloadRepository;
-import io.reactivestax.contract.repository.PositionRepository;
-import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
-import io.reactivestax.dto.Trade;
+import io.reactivestax.types.contract.QueueLoader;
+import io.reactivestax.types.contract.TradeProcessor;
+import io.reactivestax.types.contract.repository.JournalEntryRepository;
+import io.reactivestax.types.contract.repository.PayloadRepository;
+import io.reactivestax.types.contract.repository.PositionRepository;
+import io.reactivestax.types.contract.repository.SecuritiesReferenceRepository;
+import io.reactivestax.types.dto.Trade;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.reactivestax.factory.BeanFactory.*;
-import static io.reactivestax.utils.Utility.prepareTrade;
+import static io.reactivestax.utility.Utility.prepareTrade;
 
 @Slf4j
 public class TradeProcessorService implements Callable<Void>, TradeProcessor {

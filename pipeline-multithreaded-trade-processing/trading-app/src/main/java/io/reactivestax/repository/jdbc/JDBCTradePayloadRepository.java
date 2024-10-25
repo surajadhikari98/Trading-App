@@ -6,12 +6,12 @@ import io.reactivestax.enums.PostedStatusEnum;
 import io.reactivestax.model.Trade;
 import io.reactivestax.enums.StatusReasonEnum;
 import io.reactivestax.enums.ValidityStatusEnum;
-import io.reactivestax.utils.DBUtils;
+import io.reactivestax.utility.DBUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
 
-import static io.reactivestax.utils.Utility.prepareTrade;
+import static io.reactivestax.utility.Utility.prepareTrade;
 
 
 public class JDBCTradePayloadRepository implements PayloadRepository {

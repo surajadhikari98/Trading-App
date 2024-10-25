@@ -1,8 +1,8 @@
 package io.reactivestax.repository.hibernate;
 
-import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
-import io.reactivestax.entity.SecuritiesReference;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.types.contract.repository.SecuritiesReferenceRepository;
+import io.reactivestax.repository.hibernate.entity.SecuritiesReference;
+import io.reactivestax.utility.HibernateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;

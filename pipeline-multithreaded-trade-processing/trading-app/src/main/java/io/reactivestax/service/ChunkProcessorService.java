@@ -12,7 +12,7 @@ import java.io.*;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static io.reactivestax.utils.Utility.prepareTrade;
+import static io.reactivestax.utility.Utility.prepareTrade;
 
 @Slf4j
 public class ChunkProcessorService implements ChunkProcessor {

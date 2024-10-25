@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.reactivestax.factory.BeanFactory.*;
-import static io.reactivestax.utils.Utility.prepareTrade;
+import static io.reactivestax.utility.Utility.prepareTrade;
 
 @Slf4j
 public class TradeProcessorService implements Callable<Void>, TradeProcessor {

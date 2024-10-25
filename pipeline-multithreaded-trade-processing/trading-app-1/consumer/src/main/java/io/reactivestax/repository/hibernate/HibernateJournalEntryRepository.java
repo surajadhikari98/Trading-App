@@ -1,9 +1,9 @@
 package io.reactivestax.repository.hibernate;
 
-import io.reactivestax.contract.repository.JournalEntryRepository;
-import io.reactivestax.dto.Trade;
-import io.reactivestax.entity.JournalEntries;
-import io.reactivestax.utils.HibernateUtil;
+import io.reactivestax.types.contract.repository.JournalEntryRepository;
+import io.reactivestax.types.dto.Trade;
+import io.reactivestax.repository.hibernate.entity.JournalEntries;
+import io.reactivestax.utility.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 

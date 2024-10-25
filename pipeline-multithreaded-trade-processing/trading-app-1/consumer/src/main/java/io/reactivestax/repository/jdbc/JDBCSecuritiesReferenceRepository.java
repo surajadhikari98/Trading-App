@@ -1,7 +1,7 @@
 package io.reactivestax.repository.jdbc;
 
-import io.reactivestax.contract.repository.SecuritiesReferenceRepository;
-import io.reactivestax.utils.DBUtils;
+import io.reactivestax.types.contract.repository.SecuritiesReferenceRepository;
+import io.reactivestax.utility.DBUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.Connection;
