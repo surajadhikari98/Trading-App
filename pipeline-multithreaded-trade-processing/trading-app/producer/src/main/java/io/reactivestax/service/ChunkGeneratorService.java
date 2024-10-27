@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesStringFormat;
+
 @Slf4j
 public class ChunkGeneratorService implements ChunkGenerator {
 
@@ -36,7 +38,7 @@ public class ChunkGeneratorService implements ChunkGenerator {
         //creating the chunks and submitting to the executorService
         AtomicInteger startLine = new AtomicInteger(1);
         for (int i = 0; i < numberOfChunks; i++) {
-            String outputFile = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trading-app-1/producer/src/main/resources/files/" + "trades_chunk_" + (i + 1) + ".csv";
+            String outputFile = readFromApplicationPropertiesStringFormat("chunks.file.path") + "trades_chunk_" + (i + 1) + ".csv";
             executorService.submit(() -> {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
