@@ -30,7 +30,7 @@ public class ChunkProcessorService implements ChunkProcessor {
         int chunkProcessorThreadPoolSize = io.reactivestax.factory.BeanFactory.readFromApplicationPropertiesIntegerFormat("chunk.processor.thread.pool.size");
         for (int i = 0; i < chunkProcessorThreadPoolSize; i++) {
             //consulting to the queue for reading the chunksFile
-            String chunkFileName = io.reactivestax.factory.BeanFactory.getChunksFileMappingQueue().take();
+            String chunkFileName = BeanFactory.getChunksFileMappingQueue().take();
             chunkProcessorThreadPool.submit(() -> {
                 try {
                     insertTradeIntoTradePayloadTable(chunkFileName);
@@ -47,14 +47,14 @@ public class ChunkProcessorService implements ChunkProcessor {
         PayloadRepository tradePayloadRepository = BeanFactory.getTradePayloadRepository();
         TransactionUtil transactionUtil = BeanFactory.getTransactionUtil();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-                reader.readLine();
-                while ((line = reader.readLine()) != null) {
-                    Trade trade = prepareTrade(line);
-                    transactionUtil.startTransaction();
-                    tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
-                    transactionUtil.commitTransaction();
-                    MessagePublisherService.figureTheNextQueue(trade);
-                }
+            reader.readLine();
+            while ((line = reader.readLine()) != null) {
+                Trade trade = prepareTrade(line);
+                transactionUtil.startTransaction();
+                tradePayloadRepository.insertTradeIntoTradePayloadTable(line);
+                transactionUtil.commitTransaction();
+                MessagePublisherService.figureTheNextQueue(trade);
             }
         }
+    }
 }

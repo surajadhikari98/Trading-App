@@ -27,12 +27,16 @@ public class ChunkGeneratorService implements ChunkGenerator {
         } catch (IOException e) {
             log.info("**chunks** {}", e.getMessage());
         }
-
         int totalLines = lines.size();
         int linesPerChunk = (totalLines - 1) / numberOfChunks; //excluding the header here so doing -1
 
         String header = lines.get(0);
+        generateChunks(numberOfChunks, header, linesPerChunk, totalLines, lines);
+        return numberOfChunks;
+    }
 
+
+    private static void generateChunks(Integer numberOfChunks, String header, int linesPerChunk, int totalLines, List<String> lines) throws FileNotFoundException {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         //creating the chunks and submitting to the executorService
@@ -59,6 +63,5 @@ public class ChunkGeneratorService implements ChunkGenerator {
             });
         }
         executorService.shutdown();
-        return numberOfChunks;
     }
 }

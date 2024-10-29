@@ -7,6 +7,8 @@ import io.reactivestax.types.contract.repository.PayloadRepository;
 import io.reactivestax.types.contract.repository.PositionRepository;
 import io.reactivestax.types.contract.repository.SecuritiesReferenceRepository;
 import io.reactivestax.types.dto.Trade;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -19,11 +21,16 @@ import static io.reactivestax.utility.Utility.prepareTrade;
 @Slf4j
 public class TradeProcessorService implements Callable<Void>, TradeProcessor {
     private static final AtomicInteger countSec = new AtomicInteger(0);
+    @Setter
+    @Getter
     private final String queueName;
+    public static TradeProcessorService instance;
 
-    public TradeProcessorService(String queueName) {
+
+    public TradeProcessorService(String queueName){
         this.queueName = queueName;
     }
+
 
 
     @Override
