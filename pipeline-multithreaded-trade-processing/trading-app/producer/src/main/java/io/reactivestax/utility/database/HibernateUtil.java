@@ -12,6 +12,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
+import java.util.List;
+
 @Getter
 @Slf4j
 public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
@@ -36,7 +38,7 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
                         .build();
                 sessionFactory = configuration.buildSessionFactory(serviceRegistry);
             } catch (HibernateException e) {
-                log.error("Initial Session Factory creation failed. {}", e);
+                log.error("Initial Session Factory creation failed: ", e);
                 throw new ExceptionInInitializerError(e);
             }
         }
@@ -65,6 +67,7 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
         return session;
     }
 
+
     private void closeConnection() {
         Session session = threadLocalSession.get();
         if (session != null) {
@@ -82,5 +85,4 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
         getConnection().getTransaction().rollback();
         closeConnection();
     }
-
 }

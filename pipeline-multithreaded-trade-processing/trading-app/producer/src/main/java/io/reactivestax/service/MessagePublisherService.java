@@ -36,7 +36,7 @@ public class MessagePublisherService {
                         k -> Utility.random()); //generate 1,2,3
             }
             String queueName = readFromApplicationPropertiesStringFormat("queue.name") + (partitionNumber - 1);
-            getQueueMessageSender().sendMessageToQueue(queueName,trade.getTradeIdentifier());
+            Objects.requireNonNull(getQueueMessageSender()).sendMessageToQueue(queueName,trade.getTradeIdentifier());
             log.info("Assigned trade ID: {} to queue: {}", trade.getTradeIdentifier(), partitionNumber);
         }
 
@@ -50,7 +50,7 @@ public class MessagePublisherService {
                 queueNumber = Utility.random();
             }
             String queueName = readFromApplicationPropertiesStringFormat("queue.name") + (queueNumber - 1);
-            getQueueMessageSender().sendMessageToQueue(queueName,trade.getTradeIdentifier());
+            Objects.requireNonNull(getQueueMessageSender()).sendMessageToQueue(queueName,trade.getTradeIdentifier());
             log.info("Assigned trade ID {} to queue {} {}", trade.getTradeIdentifier(), trade.getTradeIdentifier(), queueNumber);
         }
     }
