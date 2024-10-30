@@ -84,6 +84,15 @@
       <version>1.7.32</version>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.14.2</version>
+      <scope>test</scope>
+    </dependency>
+
+
     <!-- RabbitMQ Java Client -->
     <dependency>
       <groupId>com.rabbitmq</groupId>
@@ -95,6 +104,12 @@
       <artifactId>lombok</artifactId>
       <version>1.18.30</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>RELEASE</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

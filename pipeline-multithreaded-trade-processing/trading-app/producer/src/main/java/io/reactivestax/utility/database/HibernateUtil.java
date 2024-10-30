@@ -1,8 +1,8 @@
 package io.reactivestax.utility.database;
 
+import io.reactivestax.repository.hibernate.entity.TradePayload;
 import io.reactivestax.types.contract.repository.ConnectionUtil;
 import io.reactivestax.types.contract.repository.TransactionUtil;
-import io.reactivestax.repository.hibernate.entity.TradePayload;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.HibernateException;
@@ -11,8 +11,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-
-import java.util.List;
 
 @Getter
 @Slf4j
