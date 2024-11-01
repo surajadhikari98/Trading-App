@@ -12,6 +12,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -78,4 +79,5 @@ public class TradeProcessorService implements Callable<Void>, TradeProcessor {
             positionsRepository.insertPosition(trade);
         }
     }
+
 }

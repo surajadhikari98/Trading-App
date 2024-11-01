@@ -54,4 +54,6 @@ public class MessagePublisherService {
             log.info("Assigned trade ID {} to queue {} {}", trade.getTradeIdentifier(), trade.getTradeIdentifier(), queueNumber);
         }
     }
+
+
 }
