@@ -21,8 +21,7 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
     private static SessionFactory sessionFactory;
     private static final String DEFAULT_RESOURCE = "hibernate.cfg.xml";
 
-    private HibernateUtil() {
-    }
+    private HibernateUtil() {}
 
 
     private static synchronized SessionFactory buildSessionFactory() {

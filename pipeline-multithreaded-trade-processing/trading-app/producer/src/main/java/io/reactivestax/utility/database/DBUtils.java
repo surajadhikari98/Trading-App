@@ -22,8 +22,7 @@ public class DBUtils implements TransactionUtil, ConnectionUtil<Connection> {
     private DataSource dataSource;
     private final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
 
-    private DBUtils() {
-    }
+    private DBUtils() {}
 
     private void createDataSource() throws FileNotFoundException {
         HikariConfig config = new HikariConfig();
