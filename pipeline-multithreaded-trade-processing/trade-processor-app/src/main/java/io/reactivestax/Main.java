@@ -1,22 +1,33 @@
 package io.reactivestax;
 
-import java.util.concurrent.CyclicBarrier;
+import io.reactivestax.component.TradeCsvChunkGenerator;
+import io.reactivestax.component.TradeCsvChunkProcessor;
+import io.reactivestax.infra.Infra;
+
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        new TradeCsvChunkGenerator().generateChunk("/Users/Suraj.Adhikari/downloads/trades.csv");
-        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(10);
-//        CyclicBarrier barrier = new CyclicBarrier(10);
-        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, 10);
-        tradeCsvChunkProcessor.processChunks();
+        //start chunkGenerator
+        new TradeCsvChunkGenerator().generateAndSubmitChunks(Infra.readFromApplicationPropertiesStringFormat("tradeFilePath"), Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks"));
+//        Thread.sleep(100);
 
-//        // Wait for chunk processing to finish
-//        barrier.await();
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
-        tradeCsvChunkProcessor.startMultiThreadsForReadingFromQueue(executorService);
+        //process chunks
+        List<LinkedBlockingDeque<String>> queues = Infra.addToQueueList();
+        int numberOfChunks = Infra.readFromApplicationPropertiesIntegerFormat("numberOfChunks");
+
+        ExecutorService chunkProcessorThreadPool = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("chunkProcessorThreadPoolSize")));
+        TradeCsvChunkProcessor tradeCsvChunkProcessor = new TradeCsvChunkProcessor(chunkProcessorThreadPool, numberOfChunks, queues);
+        tradeCsvChunkProcessor.processChunk();
+
+
+        //process trades
+        ExecutorService executorService = Executors.newFixedThreadPool(Integer.parseInt(Infra.readFromApplicationPropertiesStringFormat("tradeProcessorThreadPoolSize")));
+        tradeCsvChunkProcessor.startMultiThreadsForTradeProcessor(executorService);
 
     }
 }
