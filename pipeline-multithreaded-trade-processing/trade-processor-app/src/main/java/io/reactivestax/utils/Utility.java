@@ -14,7 +14,7 @@ public class Utility {
        return roundRobinIndex.incrementAndGet() % numberOfQueues + 1;
     }
 
-    public synchronized static int random(){
+    public static int random(){
        return ThreadLocalRandom.current().nextInt(1, numberOfQueues + 1);
     }
 

@@ -2,8 +2,7 @@ package io.reactivestax.component;
 
 import io.reactivestax.contract.ChunkGenerator;
 import io.reactivestax.infra.Infra;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,12 +10,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
+@Slf4j
 public class TradeCsvChunkGenerator implements ChunkGenerator {
-    private static final Logger logger = LoggerFactory.getLogger(TradeCsvChunkGenerator.class);
 
     @Override
-    public void generateAndSubmitChunks(String filePath, Integer numberOfChunks) throws FileNotFoundException {
+    public Integer generateAndSubmitChunks(String filePath, Integer numberOfChunks) throws FileNotFoundException {
         List<String> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -24,7 +24,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                 lines.add(line);
             }
         } catch (IOException e) {
-            logger.error("chunks {}", e.getMessage());
+            log.info("**chunks** {}", e.getMessage());
         }
 
         int totalLines = lines.size();
@@ -37,7 +37,7 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
         //creating the chunks and submitting to the executorService
         AtomicInteger startLine = new AtomicInteger(1);
         for (int i = 0; i < numberOfChunks; i++) {
-            String outputFile = "C:\\Users\\suraj\\source\\full-stack-student-mode\\suad-bootcamp-2024\\pipeline-multithreaded-trade-processing\\trade-processor-app\\src\\main\\java\\io\\reactivestax\\files\\" + "trades_chunk_" + (i + 1) + ".csv";
+            String outputFile = "/Users/Suraj.Adhikari/sources/student-mode-programs/suad-bootcamp-2024/pipeline-multithreaded-trade-processing/trade-processor-app/src/main/java/io/reactivestax/files/" + "trades_chunk_" + (i + 1) + ".csv";
             executorService.submit(() -> {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
@@ -51,12 +51,13 @@ public class TradeCsvChunkGenerator implements ChunkGenerator {
                     startLine.set(endLine);
                     //adding to queue for making the chunk generator and chunk processor decoupled
                     Infra.setChunksFileMappingQueue(outputFile);
-                    logger.info("Created: {}", outputFile);
+                    log.info("Created  {}", outputFile);
                 } catch (IOException e) {
-                    logger.error("Error in chunks generation{}", e.getMessage());
+                    log.info("Error in chunks generation {}", e.getMessage());
                 }
             });
         }
         executorService.shutdown();
+        return numberOfChunks;
     }
 }
