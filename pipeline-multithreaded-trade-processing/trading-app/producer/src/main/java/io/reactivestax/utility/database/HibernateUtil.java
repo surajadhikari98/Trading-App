@@ -4,6 +4,7 @@ import io.reactivestax.repository.hibernate.entity.TradePayload;
 import io.reactivestax.types.contract.repository.ConnectionUtil;
 import io.reactivestax.types.contract.repository.TransactionUtil;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -20,6 +21,8 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
 
     private static SessionFactory sessionFactory;
     private static final String DEFAULT_RESOURCE = "hibernate.cfg.xml";
+    @Setter
+    private static String configResource = DEFAULT_RESOURCE;
 
     private HibernateUtil() {}
 
@@ -28,7 +31,7 @@ public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
         if (sessionFactory == null) {
             try {
                 Configuration configuration = new Configuration()
-                        .configure(HibernateUtil.DEFAULT_RESOURCE)
+                        .configure(HibernateUtil.configResource)
                         .addAnnotatedClass(TradePayload.class);
                 StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
                         .applySettings(configuration.getProperties())

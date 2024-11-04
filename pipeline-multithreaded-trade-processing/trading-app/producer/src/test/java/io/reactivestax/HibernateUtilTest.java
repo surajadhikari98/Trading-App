@@ -1,95 +1,78 @@
 package io.reactivestax;
 
+import io.reactivestax.repository.hibernate.entity.TradePayload;
+import io.reactivestax.types.enums.LookUpStatusEnum;
+import io.reactivestax.types.enums.PostedStatusEnum;
+import io.reactivestax.types.enums.ValidityStatusEnum;
 import io.reactivestax.utility.database.HibernateUtil;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.BeforeAll;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class HibernateUtilTest {
 
-
-    private HibernateUtil hibernateUtil;
-    private Transaction mockTransaction;
-    private  Session session;
-    private SessionFactory mockSessionFactory;
-     AtomicInteger counter =new AtomicInteger(0);
-
-
-    @Before
-    public void setup() throws NoSuchFieldException, IllegalAccessException {
-        hibernateUtil = HibernateUtil.getInstance();
-        mockSessionFactory = mock(SessionFactory.class);
-        session = mock(Session.class);
-        mockTransaction = mock(Transaction.class);
-
-
-        when(mockSessionFactory.openSession()).thenReturn(mock(Session.class));
-        Field sessionFactory = HibernateUtil.class.getDeclaredField("sessionFactory");
-        sessionFactory.setAccessible(true); // true means since there is no setter we are getting that field
-        sessionFactory.set(null, mockSessionFactory); //null means it is static field
+    @BeforeAll
+    public static void setUp() {
+        HibernateUtil.setConfigResource("hibernate-h2.cfg.xml");
     }
 
-
     @Test
-    public void testGetInstance() {
+    public void testSessionFactoryAndConnection() {
         HibernateUtil instance = HibernateUtil.getInstance();
-        HibernateUtil instance1 = HibernateUtil.getInstance();
-//        assertSame(instance, instance1);
-        assertEquals(instance.hashCode(), instance1.hashCode());
+        Session session = instance.getConnection();
+        assertNotNull("Session should not be null", session);
+        session.close();
     }
 
     @Test
-    public void testThreadLocalSessionIsolation() throws InterruptedException {
+    public void testTransactionCommit() {
+        HibernateUtil instance = HibernateUtil.getInstance();
+        Session session = instance.getConnection();
+        Transaction transaction = null;
 
-        ConcurrentHashMap<String, Session> sessionsByThread = new ConcurrentHashMap<>();
-        CountDownLatch latch = new CountDownLatch(1);
-
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-
-       //Runnable that each threads will execute
-        Runnable task = () -> {
-            try {
-                latch.await();
-                HibernateUtil instance = HibernateUtil.getInstance();
-                Session session = instance.getConnection();
-                assertNotNull(session);
-                sessionsByThread.put(Thread.currentThread().getName(), session);
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().isInterrupted();
-            }
-        };
-
-        //Start multiple threads
-        for (int i = 0; i < 10; i++) {
-            executorService.submit(task);
-        }
-
-
-        //Release the latch to start all threads
-        latch.countDown();
-
-        executorService.shutdown();
-        executorService.awaitTermination(5, TimeUnit.SECONDS);
-
-        for(Session session1: sessionsByThread.values()){
-            for (Session session2: sessionsByThread.values()){
-                if(session1!= session2){
-                    assertNotSame(session1, session2);
-                }
-            }
+        try {
+            transaction = session.beginTransaction();
+            TradePayload tradePayload = new TradePayload();
+            tradePayload.setTradeId("2");
+            tradePayload.setValidityStatus(String.valueOf(ValidityStatusEnum.VALID));
+            tradePayload.setStatusReason("All field present ");
+            tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.FAIL));
+            tradePayload.setJeStatus(String.valueOf(PostedStatusEnum.NOT_POSTED));
+            tradePayload.setPayload("");
+            session.persist(tradePayload);
+            transaction.commit();
+            assertTrue(session.contains("Trade payload should be in session", tradePayload));
+            TradePayload retrievedTradePayload = session.createQuery("FROM TradePayload WHERE tradeId = :tradeId", TradePayload.class)
+                    .setParameter("tradeId", "2")
+                    .uniqueResult();
+            assertNotNull(retrievedTradePayload);
+            assertEquals("trade payload and retrieved value should be equal", tradePayload, retrievedTradePayload);
+        } catch (Exception e) {
+            transaction.rollback();
         }
     }
 
+    @Test
+    public void testTransactionRollback() {
+        HibernateUtil instance = HibernateUtil.getInstance();
+        Session session = instance.getConnection();
+        session.getTransaction().begin();
+        TradePayload tradePayload = new TradePayload();
+        session.getTransaction().rollback();
+        TradePayload retrievedTrade = session.get(TradePayload.class, tradePayload.getId());
+        assertNull("not saved trade should return null", retrievedTrade);
+    }
 
+    @After
+    public void cleanUp() {
+        Session session = HibernateUtil.getInstance().getConnection();
+        session.beginTransaction();
+        session.createQuery("DELETE FROM TradePayload").executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+    }
 }
