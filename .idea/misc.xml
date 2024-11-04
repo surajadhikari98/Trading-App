@@ -4,9 +4,8 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
-        <option value="$PROJECT_DIR$/pipeline-multithreaded-trade-processing/trade-analytics-app/pom.xml" />
-        <option value="$PROJECT_DIR$/pipeline-multithreaded-trade-processing/trade-processor-app/pom.xml" />
-        <option value="$PROJECT_DIR$/datapipeline-trade-processing-multithreaded/trade-processor-app/pom.xml" />
+        <option value="$PROJECT_DIR$/pipeline-multithreaded-trade-processing/trading-app/producer/pom.xml" />
+        <option value="$PROJECT_DIR$/pipeline-multithreaded-trade-processing/trading-app/consumer/pom.xml" />
       </list>
     </option>
   </component>
