@@ -25,7 +25,6 @@ public class HibernateUtilTest {
         HibernateUtil instance = HibernateUtil.getInstance();
         Session session = instance.getConnection();
         assertNotNull("Session should not be null", session);
-//        session.close();
     }
 
     @Test
@@ -37,7 +36,7 @@ public class HibernateUtilTest {
         try {
             transaction = session.beginTransaction();
             TradePayload tradePayload = new TradePayload();
-            tradePayload.setTradeId("2");
+            tradePayload.setTradeId("1");
             tradePayload.setValidityStatus(String.valueOf(ValidityStatusEnum.VALID));
             tradePayload.setStatusReason("All field present ");
             tradePayload.setLookupStatus(String.valueOf(LookUpStatusEnum.FAIL));
@@ -47,12 +46,14 @@ public class HibernateUtilTest {
             transaction.commit();
             assertTrue(session.contains("Trade payload should be in session", tradePayload));
             TradePayload retrievedTradePayload = session.createQuery("FROM TradePayload WHERE tradeId = :tradeId", TradePayload.class)
-                    .setParameter("tradeId", "2")
+                    .setParameter("tradeId", "1")
                     .uniqueResult();
             assertNotNull(retrievedTradePayload);
             assertEquals("trade payload and retrieved value should be equal", tradePayload, retrievedTradePayload);
         } catch (Exception e) {
             transaction.rollback();
+        } finally {
+            cleanUp();
         }
     }
 
@@ -67,13 +68,12 @@ public class HibernateUtilTest {
         assertNull("not saved trade should return null", retrievedTrade);
     }
 
-//    @After
+
     public void cleanUp() {
         Session session = HibernateUtil.getInstance().getConnection();
         session.beginTransaction();
         session.createQuery("DELETE FROM TradePayload").executeUpdate();
         session.getTransaction().commit();
-//        session.close();
     }
 
    @Test
