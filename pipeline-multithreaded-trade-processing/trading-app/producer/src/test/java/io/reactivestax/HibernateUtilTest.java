@@ -27,6 +27,14 @@ public class HibernateUtilTest {
         assertNotNull("Session should not be null", session);
     }
 
+
+    @Test
+    public void testSingleInstanceCreation(){
+        HibernateUtil instance = HibernateUtil.getInstance();
+        HibernateUtil instance1 = HibernateUtil.getInstance();
+        assertEquals(instance.hashCode(), instance1.hashCode());
+    }
+
     @Test
     public void testTransactionCommit() {
         HibernateUtil instance = HibernateUtil.getInstance();
@@ -69,13 +77,6 @@ public class HibernateUtilTest {
     }
 
 
-    public void cleanUp() {
-        Session session = HibernateUtil.getInstance().getConnection();
-        session.beginTransaction();
-        session.createQuery("DELETE FROM TradePayload").executeUpdate();
-        session.getTransaction().commit();
-    }
-
    @Test
     public void testCloseConnection(){
         Session session = HibernateUtil.getInstance().getConnection();
@@ -86,5 +87,12 @@ public class HibernateUtilTest {
         HibernateUtil.getThreadLocalSession().remove();
         Session currentSession = HibernateUtil.getThreadLocalSession().get();
         assertNull("Thread Local should no longer hold the session ", currentSession);
+    }
+
+    public void cleanUp() {
+        Session session = HibernateUtil.getInstance().getConnection();
+        session.beginTransaction();
+        session.createQuery("DELETE FROM TradePayload").executeUpdate();
+        session.getTransaction().commit();
     }
 }
