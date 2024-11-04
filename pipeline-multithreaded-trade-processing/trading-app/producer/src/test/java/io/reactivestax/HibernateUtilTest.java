@@ -25,7 +25,7 @@ public class HibernateUtilTest {
         HibernateUtil instance = HibernateUtil.getInstance();
         Session session = instance.getConnection();
         assertNotNull("Session should not be null", session);
-        session.close();
+//        session.close();
     }
 
     @Test
@@ -67,12 +67,24 @@ public class HibernateUtilTest {
         assertNull("not saved trade should return null", retrievedTrade);
     }
 
-    @After
+//    @After
     public void cleanUp() {
         Session session = HibernateUtil.getInstance().getConnection();
         session.beginTransaction();
         session.createQuery("DELETE FROM TradePayload").executeUpdate();
         session.getTransaction().commit();
+//        session.close();
+    }
+
+   @Test
+    public void testCloseConnection(){
+        Session session = HibernateUtil.getInstance().getConnection();
+        assertNotNull(session);
+        assertTrue("session should be open", session.isOpen());
         session.close();
+        assertFalse("Session should be closed", session.isOpen());
+        HibernateUtil.getThreadLocalSession().remove();
+        Session currentSession = HibernateUtil.getThreadLocalSession().get();
+        assertNull("Thread Local should no longer hold the session ", currentSession);
     }
 }

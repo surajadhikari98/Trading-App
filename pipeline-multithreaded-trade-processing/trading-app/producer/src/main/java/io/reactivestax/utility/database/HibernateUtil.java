@@ -17,6 +17,7 @@ import org.hibernate.cfg.Configuration;
 @Slf4j
 public class HibernateUtil implements TransactionUtil, ConnectionUtil<Session> {
     private static volatile HibernateUtil instance;
+    @Getter
     private static final ThreadLocal<Session> threadLocalSession = new ThreadLocal<>();
 
     private static SessionFactory sessionFactory;
